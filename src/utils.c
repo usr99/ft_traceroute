@@ -1,18 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_traceroute.h                                    :+:      :+:    :+:   */
+/*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/19 21:53:09 by mamartin         ###   ########.fr       */
+/*   Created: 2022/09/19 21:51:30 by mamartin          #+#    #+#             */
+/*   Updated: 2022/09/19 21:54:04 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef _FT_TRACEROUTE_H_
-# define _FT_TRACEROUTE_H_
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "ft_traceroute.h"
 
-void exit_error(const char* message);
-
-#endif
+void exit_error(const char* message)
+{
+	dprintf(STDERR_FILENO, "%s\n", message);
+	exit(2);
+}

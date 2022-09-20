@@ -10,7 +10,7 @@ CC		= gcc
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= ft_traceroute.c
+SRC		= ft_traceroute.c options.c utils.c
 
 OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}
@@ -49,7 +49,7 @@ ${OBJDIR}:
 
 ${LIBFT}:
 	@echo "${BUILD} libft"
-	@${MAKE} --no-print-directory bonus -C libft
+	@${MAKE} --no-print-directory -C libft
 
 ##################################################
 #  				   USUAL RULES					 #./
