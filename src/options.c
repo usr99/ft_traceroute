@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/19 22:15:58 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/20 17:20:55 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,10 @@
 
 void init_options_struct(t_cmdline_args* opt)
 {
-	opt->bitmask = 0;
+	opt->forceIPv6 = false;
+	opt->dns_enabled = true;
+	opt->protocol = DEFAULT_PROTOCOL;
+	opt->protocol = DEFAULT_SOCKTYPE;
 
 	opt->first_ttl = DEFAULT_FIRST_TTL;
 	opt->max_ttl = DEFAULT_MAX_TTL;
@@ -38,6 +41,7 @@ t_cmdline_args parse_arguments(int argc, char** argv)
 	static t_expected_opts valid_options[N_OPTIONS_SUPPORTED] = {
 		{ .name = '6', .has_param = false },
 		{ .name = 'I', .has_param = false },
+		{ .name = 'T', .has_param = false },
 		{ .name = 'n', .has_param = false },
 		{ .name = 'f', .has_param = true, .paramtype = PARAM_T_INT32 },
 		{ .name = 'm', .has_param = true, .paramtype = PARAM_T_INT32 },
@@ -51,7 +55,6 @@ t_cmdline_args parse_arguments(int argc, char** argv)
 	t_argument arg;
 	int ret;
 	int val;
-	int port = -1;
 	int nparameters = 0;
 
 	init_options_struct(&options);
@@ -63,13 +66,18 @@ t_cmdline_args parse_arguments(int argc, char** argv)
 				switch (arg.info.opt.name)
 				{
 					case '6':
-						options.bitmask |= OPT_FORCE_IPV6;
+						options.forceIPv6 = true;
 						break;
 					case 'I':
-						options.bitmask |= OPT_USE_ICMP;
+						options.protocol = IPPROTO_ICMP;
+						options.socktype = SOCK_RAW;
+						break;
+					case 'T':
+						options.protocol = IPPROTO_TCP;
+						options.socktype = SOCK_STREAM;
 						break;
 					case 'n':
-						options.bitmask |= OPT_NO_DNS_RESOLUTION;
+						options.dns_enabled = false;
 						break;
 					case 'f':
 						options.first_ttl = *(uint8_t*)arg.info.opt.value;
@@ -89,7 +97,7 @@ t_cmdline_args parse_arguments(int argc, char** argv)
 							exit_error("no more than 10 probes per hop");
 						break;
 					case 'p':
-						port = *(uint16_t*)arg.info.opt.value;
+						options.port = *(uint16_t*)arg.info.opt.value;
 						break;
 					case 'w':
 						options.waittime = (float)*(uint32_t*)arg.info.opt.value;
@@ -136,14 +144,6 @@ t_cmdline_args parse_arguments(int argc, char** argv)
 	if (ret == -2) // code to indicate memory allocation failure
 		exit_error("Out of memory");
 
-	if (port != -1) // -p was specified
-	{
-		if (options.bitmask & OPT_USE_ICMP)
-			options.icmp_seq = port; // define the starting icmp sequence in ECHO requests
-		else
-			options.port = port; // define the UDP port to use
-	}
-
 	if (!options.address)
 		(argc != 1) ? exit_error("Specify \"host\" missing argument.") : print_usage(argv[0]);
 	return options;
@@ -179,9 +179,10 @@ void print_usage(const char* program_name)
 
 void debug_options(t_cmdline_args* opt)
 {
-	printf("-6 = %d\n", opt->bitmask & OPT_FORCE_IPV6);
-	printf("-I = %d\n", opt->bitmask & OPT_USE_ICMP);
-	printf("-n = %d\n", opt->bitmask & OPT_NO_DNS_RESOLUTION);
+	printf("-6 = %d\n", opt->forceIPv6);
+	printf("-I = %d\n", opt->protocol == IPPROTO_ICMP);
+	printf("-T = %d\n", opt->protocol == IPPROTO_TCP);
+	printf("-n = %d\n", opt->dns_enabled);
 
 	printf("-f = %d\n", opt->first_ttl);
 	printf("-m = %d\n", opt->max_ttl);

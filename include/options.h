@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/19 19:21:25 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/20 17:20:26 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,12 @@
 # define _OPTIONS_H_
 
 # include <stdint.h>
+# include <netdb.h>
 
 # define N_OPTIONS_SUPPORTED	9
 
+# define DEFAULT_PROTOCOL		IPPROTO_UDP
+# define DEFAULT_SOCKTYPE		SOCK_DGRAM
 # define DEFAULT_FIRST_TTL		1
 # define DEFAULT_MAX_TTL		30
 # define DEFAULT_SQUERIES		16
@@ -29,16 +32,12 @@
 # define PACKETLEN_MIN			28
 # define PACKETLEN_MAX			65000
 
-enum e_options_flags
-{
-	OPT_FORCE_IPV6			= 1, // -6
-	OPT_USE_ICMP			= 2, // -I
-	OPT_NO_DNS_RESOLUTION	= 4	 // -n
-};
-
 typedef struct s_cmdline_args
 {
-	uint8_t bitmask;
+	bool forceIPv6;
+	bool dns_enabled;
+	uint8_t protocol;
+	uint8_t socktype;
 
 	uint8_t first_ttl;	// -f
 	uint8_t max_ttl;	// -m
