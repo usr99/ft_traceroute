@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/20 19:45:33 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/21 11:23:30 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,11 +41,11 @@ typedef struct s_cmdline_args
 	uint8_t protocol;
 	uint8_t socktype;
 
-	uint8_t first_ttl;	// -f
+	uint8_t ttl;		// -f
 	uint8_t max_ttl;	// -m
 	uint8_t squeries;	// -N
 	uint16_t port;		// -p
-	uint16_t icmp_seq;	// -p
+	uint16_t icmpseq;	// -p
 	float waittime;		// -w
 	uint8_t nqueries;	// -q
 	

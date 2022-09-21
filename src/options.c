@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/20 20:04:55 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/21 18:01:02 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,11 @@ void init_options_struct(t_cmdline_args* opt)
 	opt->protocol = DEFAULT_PROTOCOL;
 	opt->socktype = DEFAULT_SOCKTYPE;
 
-	opt->first_ttl = DEFAULT_FIRST_TTL;
+	opt->ttl = DEFAULT_FIRST_TTL;
 	opt->max_ttl = DEFAULT_MAX_TTL;
 	opt->squeries = DEFAULT_SQUERIES;
 	opt->port = DEFAULT_PORT;
-	opt->icmp_seq = DEFAULT_IMCP_SEQ;
+	opt->icmpseq = DEFAULT_IMCP_SEQ;
 	opt->waittime = DEFAULT_WAITTIME;
 	opt->nqueries = DEFAULT_NQUERIES;
 
@@ -78,12 +78,21 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 						opt->dns_enabled = false;
 						break;
 					case 'f':
-						opt->first_ttl = *(uint8_t*)arg.info.opt.value;
+						val = *(int*)arg.info.opt.value;
+						if (val <= 0)
+						{
+							free(arg.info.opt.value);
+							return log_error("first hop out of range");
+						}
+						opt->ttl = (uint8_t)val;
 						break;
 					case 'm':
 						val = *(int*)arg.info.opt.value;
-						if (val < 0 || val > 255)	
+						if (val < 0 || val > 255)
+						{
+							free(arg.info.opt.value);
 							return log_error("max hops cannot be more than 255");
+						}
 						opt->max_ttl = (uint8_t)val;
 						break;
 					case 'N':
@@ -92,7 +101,10 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 					case 'q':
 						opt->nqueries = *(uint8_t*)arg.info.opt.value;
 						if (opt->nqueries == 0 || opt->nqueries > 10)
+						{
+							free(arg.info.opt.value);
 							return log_error("no more than 10 probes per hop");
+						}
 						break;
 					case 'p':
 						opt->port = *(uint16_t*)arg.info.opt.value;
@@ -139,6 +151,11 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 	if (ret == -2) // code to indicate memory allocation failure
 		return log_error("Out of memory");
 
+	if (opt->ttl > opt->max_ttl)
+		return log_error("first hop out of range");
+	if (opt->squeries < 1)
+		opt->squeries = 1;
+
 	if (!opt->address)
 		return (argc != 1) ? log_error("Specify \"host\" missing argument.") : print_usage(argv[0]);
 	return 0;
@@ -169,7 +186,7 @@ int print_usage(const char* program_name)
 		" -q nqueries\tSet the number of probes per each hop. Default is 3\n",
 		program_name
 	);
-	return 0;
+	exit(EXIT_SUCCESS);
 }
 
 void debug_options(t_cmdline_args* opt)
@@ -179,15 +196,14 @@ void debug_options(t_cmdline_args* opt)
 	printf("-T = %d\n", opt->protocol == IPPROTO_TCP);
 	printf("-n = %d\n", opt->dns_enabled);
 
-	printf("-f = %d\n", opt->first_ttl);
+	printf("-f = %d\n", opt->ttl);
 	printf("-m = %d\n", opt->max_ttl);
 	printf("-N = %d\n", opt->squeries);
 	printf("-p UDP = %d\n", opt->port);
-	printf("-p ICMP = %d\n", opt->icmp_seq);
+	printf("-p ICMP = %d\n", opt->icmpseq);
 	printf("-w = %f\n", opt->waittime);
 	printf("-q = %d\n", opt->nqueries);
 
 	printf("address = %s\n", opt->address);
 	printf("packetlen = %d\n", opt->packetlen);
 }
-

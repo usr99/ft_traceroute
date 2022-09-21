@@ -10,7 +10,7 @@ CC		= gcc
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= ft_traceroute.c options.c dns.c utils.c
+SRC		= ft_traceroute.c options.c dns.c probes.c utils.c
 
 OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}

@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 20:19:46 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/20 20:22:43 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/20 21:26:56 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ int resolve_hostname(struct addrinfo* hostname, const t_cmdline_args* opt)
 	{
 		if (tmp->ai_family != AF_INET && tmp->ai_family != AF_INET6)
 			continue ;
-		if (!addr_found || (tmp->ai_family == AF_INET6 && opt->forceIPv6))
+		if (!addr_found || ((tmp->ai_family == AF_INET6) == (opt->forceIPv6 == true)))
 		{
 			*hostname = *tmp;
 			addr_found = true;
