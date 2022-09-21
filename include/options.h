@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/20 17:20:26 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/20 19:45:33 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,9 @@
 # include <stdint.h>
 # include <netdb.h>
 
-# define N_OPTIONS_SUPPORTED	9
+# include "libft.h"
+
+# define N_OPTIONS_SUPPORTED	10
 
 # define DEFAULT_PROTOCOL		IPPROTO_UDP
 # define DEFAULT_SOCKTYPE		SOCK_DGRAM
@@ -56,8 +58,8 @@ typedef struct s_cmdline_args
 } t_cmdline_args;
 
 void init_options_struct(t_cmdline_args* opt);
-t_cmdline_args parse_arguments(int argc, char** argv);
-void print_usage();
+int parse_arguments(int argc, char** argv, t_cmdline_args* opt);
+int print_usage();
 void debug_options(t_cmdline_args* opt);
 
 #endif

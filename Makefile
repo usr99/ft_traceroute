@@ -4,13 +4,13 @@
 
 TARGET	= ft_traceroute
 
-CFLAGS	= -Wall -Wextra -Werror
+CFLAGS	= -Wall -Wextra -g #-Werror
 CC		= gcc
 
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= ft_traceroute.c options.c utils.c
+SRC		= ft_traceroute.c options.c dns.c utils.c
 
 OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}
