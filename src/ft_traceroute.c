@@ -31,8 +31,11 @@ int main(int argc, char** argv)
 	if (parse_arguments(argc, argv, &opt) == -1)
 		return 2;
 
-	debug_options(&opt);
-	return 0;
+	if (getuid() != 0)
+	{
+		log_error("user must have root privileges !");
+		return 2;
+	}
 
 	// struct addrinfo host;
 	// if (resolve_hostname(&host, &opt) == -1)
