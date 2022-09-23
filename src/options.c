@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/21 18:01:02 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 16:32:27 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,12 +42,12 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 		{ .name = 'I', .has_param = false },
 		{ .name = 'T', .has_param = false },
 		{ .name = 'n', .has_param = false },
-		{ .name = 'f', .has_param = true, .paramtype = PARAM_T_INT32 },
-		{ .name = 'm', .has_param = true, .paramtype = PARAM_T_INT32 },
-		{ .name = 'N', .has_param = true, .paramtype = PARAM_T_INT32 },
-		{ .name = 'q', .has_param = true, .paramtype = PARAM_T_INT32 },
-		{ .name = 'p', .has_param = true, .paramtype = PARAM_T_INT32 },
-		{ .name = 'w', .has_param = true, .paramtype = PARAM_T_INT32 }
+		{ .name = 'f', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'm', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'N', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'q', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'p', .has_param = true, .paramtype = PARAM_T_INT64 },
+		{ .name = 'w', .has_param = true, .paramtype = PARAM_T_FLOAT64 }
 	};
 
 	t_argument arg;
@@ -61,7 +61,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 		switch (arg.type)
 		{
 			case ARG_T_OPTION:
-				switch (arg.info.opt.name)
+				switch (arg.name)
 				{
 					case '6':
 						opt->forceIPv6 = true;
@@ -78,53 +78,53 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 						opt->dns_enabled = false;
 						break;
 					case 'f':
-						val = *(int*)arg.info.opt.value;
+						val = *(int*)arg.value;
 						if (val <= 0)
 						{
-							free(arg.info.opt.value);
+							free(arg.value);
 							return log_error("first hop out of range");
 						}
 						opt->ttl = (uint8_t)val;
 						break;
 					case 'm':
-						val = *(int*)arg.info.opt.value;
+						val = *(int*)arg.value;
 						if (val < 0 || val > 255)
 						{
-							free(arg.info.opt.value);
+							free(arg.value);
 							return log_error("max hops cannot be more than 255");
 						}
 						opt->max_ttl = (uint8_t)val;
 						break;
 					case 'N':
-						opt->squeries = *(uint8_t*)arg.info.opt.value;
+						opt->squeries = *(uint8_t*)arg.value;
 						break;
 					case 'q':
-						opt->nqueries = *(uint8_t*)arg.info.opt.value;
+						opt->nqueries = *(uint8_t*)arg.value;
 						if (opt->nqueries == 0 || opt->nqueries > 10)
 						{
-							free(arg.info.opt.value);
+							free(arg.value);
 							return log_error("no more than 10 probes per hop");
 						}
 						break;
 					case 'p':
-						opt->port = *(uint16_t*)arg.info.opt.value;
+						opt->port = *(uint16_t*)arg.value;
 						break;
 					case 'w':
-						opt->waittime = (float)*(uint32_t*)arg.info.opt.value;
+						opt->waittime = *(double*)arg.value;
 						break;
 					default: // should never happen
 						break;
 				}
-				if (arg.info.opt.value)
-					free(arg.info.opt.value);
+				if (arg.value)
+					free(arg.value);
 				break ;
 			case ARG_T_PARAMETER:
 				nparameters++;
 				if (nparameters == 1)
-					opt->address = (char*)arg.info.param.value;
+					opt->address = (char*)arg.value;
 				else if (nparameters == 2)
 				{
-					val = ft_atoi((char*)arg.info.param.value);
+					val = ft_atoi((char*)arg.value);
 					if (val < PACKETLEN_MIN)
 						val = PACKETLEN_MIN;
 					else if (val > PACKETLEN_MAX)
@@ -135,7 +135,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 					return log_error("too much arguments specified");
 				break ;
 			case ARG_T_ERROR:
-				switch (arg.info.err.type)
+				switch (arg.errtype)
 				{
 					case ERR_BAD_OPTION:
 						return log_error("Bad option");
@@ -143,6 +143,8 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 						return log_error("Option requires an argument");
 					case ERR_BAD_PARAM_TYPE:
 						return log_error("Cannot handle option with arg");
+					default: // should never happen
+						break;
 				}
 				break ;
 		}

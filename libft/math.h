@@ -1,20 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   probes.c                                           :+:      :+:    :+:   */
+/*   math.h                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:05:38 by mamartin         ###   ########.fr       */
+/*   Created: 2022/09/17 22:41:14 by mamartin          #+#    #+#             */
+/*   Updated: 2022/09/22 15:43:54 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <netdb.h>
-#include <sys/time.h>
+#ifndef _MATH_H_
+#define _MATH_H_
 
-#include "ft_traceroute.h"
-#include "probes.h"
+int		ft_pow(int nb, int power);
+float	ft_fpow(float nb, int power);
+int		ft_sqrt(int nb);
+float	ft_fsqrt(float nb);
+int		ft_abs(int x);
+float	ft_fabs(float x);
 
+int		ft_strtol(const char* nptr, long* value);
+int		ft_strtof(const char* nptr, double* value);
 
+#endif

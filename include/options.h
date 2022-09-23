@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/21 11:23:30 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 16:31:54 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ typedef struct s_cmdline_args
 	uint8_t squeries;	// -N
 	uint16_t port;		// -p
 	uint16_t icmpseq;	// -p
-	float waittime;		// -w
+	double waittime;	// -w
 	uint8_t nqueries;	// -q
 	
 	char* address;

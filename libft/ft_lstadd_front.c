@@ -1,20 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   probes.c                                           :+:      :+:    :+:   */
+/*   ft_lstadd_front.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
+/*   By: user42 <mamartin@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:05:38 by mamartin         ###   ########.fr       */
+/*   Created: 2020/11/22 14:44:35 by user42            #+#    #+#             */
+/*   Updated: 2020/11/22 15:53:42 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <netdb.h>
-#include <sys/time.h>
+#include "mandatory.h"
 
-#include "ft_traceroute.h"
-#include "probes.h"
-
-
+void	ft_lstadd_front(t_list **alst, t_list *new)
+{
+	new->next = *alst;
+	*alst = new;
+}

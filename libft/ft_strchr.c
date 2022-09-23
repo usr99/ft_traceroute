@@ -1,20 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   probes.c                                           :+:      :+:    :+:   */
+/*   ft_strchr.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:05:38 by mamartin         ###   ########.fr       */
+/*   Created: 2020/09/18 17:49:40 by mamartin          #+#    #+#             */
+/*   Updated: 2020/11/21 17:38:52 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <netdb.h>
-#include <sys/time.h>
+#include "mandatory.h"
 
-#include "ft_traceroute.h"
-#include "probes.h"
+char	*ft_strchr(const char *s, int c)
+{
+	char	*s_noconst;
+	char	to_find;
+	int		i;
 
-
+	i = 0;
+	s_noconst = (char *)s;
+	to_find = (char)c;
+	while (s[i] != '\0' && s[i] != to_find)
+		i++;
+	if (s[i] == to_find && s[i])
+		return (s_noconst + i);
+	else
+		return (NULL);
+}

@@ -1,20 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   probes.c                                           :+:      :+:    :+:   */
+/*   ft_bzero.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:05:38 by mamartin         ###   ########.fr       */
+/*   Created: 2020/09/18 22:29:09 by mamartin          #+#    #+#             */
+/*   Updated: 2020/09/18 22:30:55 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <netdb.h>
-#include <sys/time.h>
+#include "mandatory.h"
 
-#include "ft_traceroute.h"
-#include "probes.h"
+void	ft_bzero(void *s, size_t n)
+{
+	unsigned char	*cast_s;
 
-
+	cast_s = (unsigned char *)s;
+	while (n--)
+	{
+		*cast_s = '\0';
+		cast_s++;
+	}
+}

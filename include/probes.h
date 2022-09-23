@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:19:09 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/21 19:34:29 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 16:05:28 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,35 +18,23 @@
 # include <limits.h>
 # include <time.h>
 
-# include "libft.h"
-
-typedef struct s_ttl_settings
+typedef struct s_probe
 {
-	uint8_t ttl;
-	int nb_sent;
-	int nb_recvd;
-	t_list* probes; // t_probe_packet
-} t_ttl_settings;
-
-typedef struct s_probe_packet
-{
+	/* Set after sendto() */
 	uint16_t id;
 	struct timeval time_sent;
-	t_list* replies; // t_gateway_response
-} t_probe_packet;
 
-typedef struct s_gateway_response
-{
+	/* Set after recvfrom() */
+	char hostname[HOST_NAME_MAX];
 	char address[INET6_ADDRSTRLEN];
-	char name[HOST_NAME_MAX];
-	struct timeval time;
-} t_gateway_response;
+	struct timeval time_recvd;
+} t_probe;
 
-t_ttl_settings* push_new_ttl_setting(t_list** queries, uint8_t ttl);
-t_probe_packet* push_new_probe_packet(t_list** probes, uint16_t id);
-t_gateway_response* push_new_response(t_list** gateways, struct sockaddr* addr, struct timeval timestamp);
-t_probe_packet* get_probe_from_id(t_list* queries, uint16_t id);
-
-void debug_queries(t_list* queries);
+typedef struct s_hop
+{
+	t_probe* probes;
+	unsigned int nb_sent;
+	unsigned int nb_recvd;
+} t_hop;
 
 #endif
