@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 14:25:43 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 18:38:39 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,11 +92,11 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 int init_route(t_config* cfg, t_route* route)
 {
 	char address[INET6_ADDRSTRLEN];
-	if (inet_ntop(cfg->opt.socktype, &((struct sockaddr_in*)&cfg->host)->sin_addr, address, INET6_ADDRSTRLEN) == NULL)
+	if (inet_ntop(cfg->opt.family, &((struct sockaddr_in*)&cfg->host)->sin_addr, address, INET6_ADDRSTRLEN) == NULL)
 		return -1;
 
 	route->len = 0;
-	route->last_ttl = cfg->opt.first_ttl;
+	route->last_ttl = cfg->opt.first_ttl - 1;
 	route->maxlen = cfg->opt.max_ttl - cfg->opt.first_ttl + 1;
 
 	route->hops = ft_calloc(route->maxlen, sizeof(t_hop));

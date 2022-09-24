@@ -10,8 +10,8 @@ CC		= gcc
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= main.c tracerouting.c options.c name_resolution.c probes.c utils.c debug.c
-HEADERS = ft_traceroute.h options.h probes.h
+SRC		= main.c tracerouting.c options.c name_resolution.c packets.c utils.c debug.c
+HEADERS = ft_traceroute.h options.h packets.h
 DEPS = ${addprefix include/, ${HEADERS}}
 
 OBJDIR	= ./objs/

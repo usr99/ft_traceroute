@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 14:44:50 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 15:15:05 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define _FT_TRACEROUTE_H_
 
 # include "options.h"
-# include "probes.h"
+# include "packets.h"
 # include "libft.h"
 
 typedef struct s_config

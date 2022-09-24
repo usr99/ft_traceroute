@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 14:24:45 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 18:41:17 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,17 @@
 
 int send_probes(t_config* cfg, t_route* route)
 {
-	t_hop* current_hop = route->hops + (route->last_ttl - cfg->opt.first_ttl);
+	t_hop* current_hop = route->hops + (route->last_ttl - cfg->opt.first_ttl) + 1;
 	int total = 0;
 
 	while (total < cfg->opt.squeries)
 	{
 		if (current_hop->probes == NULL)
 		{
+			route->last_ttl++;
+			if (route->last_ttl > cfg->opt.max_ttl)
+				break ;
+
 			/* Allocate a new array of probes for the next hop */
 			current_hop->probes = ft_calloc(cfg->opt.nqueries, sizeof(t_probe));
 			if (!current_hop->probes)
@@ -32,7 +36,6 @@ int send_probes(t_config* cfg, t_route* route)
 			/* Set ttl field for the future packets */
 			if (setsockopt(cfg->sockfd, IPPROTO_IP, IP_TTL, &route->last_ttl, sizeof(uint8_t)) == -1)
 				return -1;
-			route->last_ttl++;
 		}
 
 		/*
@@ -95,29 +98,17 @@ int recv_response(t_config* cfg, t_route* route)
 		if (bytes == -1)
 			return -1;
 
-		/*
-		** Match one of the probes sent to the response
-		** UDP destination port is used to identify probes
-		**
-		** original packet can be found after IP and ICMP headers
-		** UDP header is placed after the IP header in the original packet
-		*/
-		struct icmphdr* icmp = (struct icmphdr*)(buf + sizeof(struct iphdr));
-
-		// compare checksums
-		// check icmp type
-		// check packet is ours
-
-		uint8_t ttl;
-		uint16_t id;
-		extract_probe_info((const char*)(icmp + 1), &ttl, &id);
-
-		t_hop* hop = route->hops + ttl - cfg->opt.first_ttl;
-		hop->nb_recvd++;
-		if (save_gateway(hop, (struct sockaddr*)&address, id) == -1)
+		int type = process_response(buf, bytes, route->hops, cfg);
+		if (type == -1)
 			return -1;
-
-		count++;
+		else if (type == ICMP_PORT_UNREACH)
+		{
+			printf("host found\n");
+			exit(EXIT_SUCCESS);
+			count++;
+		}
+		else
+			count++;
 	}
 
 	return 0;	
