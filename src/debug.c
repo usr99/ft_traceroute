@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/23 17:37:32 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 20:08:53 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 14:36:02 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 void debug_options(t_cmdline_args* opt)
 {
-	printf("-6 = %d\n", opt->forceIPv6);
+	printf("-6 = %d\n", opt->family == AF_INET6);
 	printf("-I = %d\n", opt->protocol == IPPROTO_ICMP);
 	printf("-T = %d\n", opt->protocol == IPPROTO_TCP);
 	printf("-n = %d\n", opt->dns_enabled);

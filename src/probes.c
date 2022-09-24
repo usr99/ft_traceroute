@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 19:19:40 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 14:33:07 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,8 @@ void extract_probe_info(const char* packetbuf, uint8_t* ttl, uint16_t* id)
 
 int save_gateway(t_hop* hop, const struct sockaddr* addr, uint16_t id)
 {
-	t_probe* p = hop->probes + (id - hop->probes->id);
+	t_probe* gateway = hop->probes + (id - hop->probes->id);
 
-	gettimeofday(&p->time_recvd, NULL);
-	if (inet_ntop(AF_INET, &((struct sockaddr_in*)addr)->sin_addr, p->address, INET_ADDRSTRLEN) == NULL)
-		return -1;
-	if (getnameinfo(addr, sizeof(struct sockaddr_in), p->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
-		return -1;
-	return 0;	
+	gettimeofday(&gateway->time_recvd, NULL);
+	return fetch_hostname(addr, gateway);
 }

@@ -10,7 +10,9 @@ CC		= gcc
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= ft_traceroute.c options.c dns.c probes.c utils.c debug.c
+SRC		= main.c tracerouting.c options.c name_resolution.c probes.c utils.c debug.c
+HEADERS = ft_traceroute.h options.h probes.h
+DEPS = ${addprefix include/, ${HEADERS}}
 
 OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}
@@ -35,7 +37,7 @@ CLEAN = ${RED}Cleaning${RESET}
 #				COMPILATION RULES				 #
 ##################################################
 
-${OBJDIR}%.o: ${SRCDIR}%.c
+${OBJDIR}%.o: ${SRCDIR}%.c ${DEPS}
 	@echo "${COMPILE} $<"
 	@${CC} ${CFLAGS} -c $< ${INC} -o $@
 
