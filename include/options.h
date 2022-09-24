@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:31:54 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 17:37:59 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ typedef struct s_cmdline_args
 	uint8_t protocol;
 	uint8_t socktype;
 
-	uint8_t ttl;		// -f
+	uint8_t first_ttl;	// -f
 	uint8_t max_ttl;	// -m
 	uint8_t squeries;	// -N
 	uint16_t port;		// -p
@@ -51,15 +51,10 @@ typedef struct s_cmdline_args
 	
 	char* address;
 	uint16_t packetlen;
-
-	// interface -i
-	// tos -t
-	// source_addr -s
 } t_cmdline_args;
 
 void init_options_struct(t_cmdline_args* opt);
 int parse_arguments(int argc, char** argv, t_cmdline_args* opt);
 int print_usage();
-void debug_options(t_cmdline_args* opt);
 
 #endif

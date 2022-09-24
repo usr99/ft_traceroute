@@ -10,7 +10,7 @@ CC		= gcc
 INC 	= -I ./include -I ./libft
 
 SRCDIR	= ./src/
-SRC		= ft_traceroute.c options.c dns.c probes.c utils.c
+SRC		= ft_traceroute.c options.c dns.c probes.c utils.c debug.c
 
 OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}
@@ -51,11 +51,15 @@ ${LIBFT}:
 	@echo "${BUILD} libft"
 	@${MAKE} --no-print-directory -C libft
 
+root: ${TARGET}
+	@chown root $<
+	@setcap cap_net_raw=ep $<
+
 ##################################################
 #  				   USUAL RULES					 #./
 ##################################################
 
-all: ${TARGET}
+all: root
 
 clean:
 	@echo "${CLEAN} objects"

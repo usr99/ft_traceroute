@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:19:09 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:05:28 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 19:08:53 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 # include <stdint.h>
 # include <limits.h>
 # include <time.h>
+
+#include "ft_traceroute.h"
 
 typedef struct s_probe
 {
@@ -36,5 +38,9 @@ typedef struct s_hop
 	unsigned int nb_sent;
 	unsigned int nb_recvd;
 } t_hop;
+
+void init_probe(t_probe* ptr, uint16_t id);
+void extract_probe_info(const char* packetbuf, uint8_t* ttl, uint16_t* id);
+int save_gateway(t_hop* hop, const struct sockaddr* addr, uint16_t id);
 
 #endif

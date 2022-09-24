@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 16:32:27 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 17:38:11 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void init_options_struct(t_cmdline_args* opt)
 	opt->protocol = DEFAULT_PROTOCOL;
 	opt->socktype = DEFAULT_SOCKTYPE;
 
-	opt->ttl = DEFAULT_FIRST_TTL;
+	opt->first_ttl = DEFAULT_FIRST_TTL;
 	opt->max_ttl = DEFAULT_MAX_TTL;
 	opt->squeries = DEFAULT_SQUERIES;
 	opt->port = DEFAULT_PORT;
@@ -84,7 +84,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 							free(arg.value);
 							return log_error("first hop out of range");
 						}
-						opt->ttl = (uint8_t)val;
+						opt->first_ttl = (uint8_t)val;
 						break;
 					case 'm':
 						val = *(int*)arg.value;
@@ -153,7 +153,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 	if (ret == -2) // code to indicate memory allocation failure
 		return log_error("Out of memory");
 
-	if (opt->ttl > opt->max_ttl)
+	if (opt->first_ttl > opt->max_ttl)
 		return log_error("first hop out of range");
 	if (opt->squeries < 1)
 		opt->squeries = 1;
@@ -189,23 +189,4 @@ int print_usage(const char* program_name)
 		program_name
 	);
 	exit(EXIT_SUCCESS);
-}
-
-void debug_options(t_cmdline_args* opt)
-{
-	printf("-6 = %d\n", opt->forceIPv6);
-	printf("-I = %d\n", opt->protocol == IPPROTO_ICMP);
-	printf("-T = %d\n", opt->protocol == IPPROTO_TCP);
-	printf("-n = %d\n", opt->dns_enabled);
-
-	printf("-f = %d\n", opt->ttl);
-	printf("-m = %d\n", opt->max_ttl);
-	printf("-N = %d\n", opt->squeries);
-	printf("-p UDP = %d\n", opt->port);
-	printf("-p ICMP = %d\n", opt->icmpseq);
-	printf("-w = %f\n", opt->waittime);
-	printf("-q = %d\n", opt->nqueries);
-
-	printf("address = %s\n", opt->address);
-	printf("packetlen = %d\n", opt->packetlen);
 }
