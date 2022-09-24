@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 18:34:11 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 19:31:13 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ int process_response(char* payload, size_t len, t_hop* hops, t_config* cfg)
 	gettimeofday(&gateway->time_recvd, NULL);
 
 	hop->nb_recvd++;
-	return type;
+	return (type == ICMP_PORT_UNREACH ? ttl : 0);
 }
 
 int validate_packet(char* payload, size_t len, t_config* cfg)

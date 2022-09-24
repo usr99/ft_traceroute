@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 18:41:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 19:35:05 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,17 +98,19 @@ int recv_response(t_config* cfg, t_route* route)
 		if (bytes == -1)
 			return -1;
 
-		int type = process_response(buf, bytes, route->hops, cfg);
-		if (type == -1)
-			return -1;
-		else if (type == ICMP_PORT_UNREACH)
+		int destination = process_response(buf, bytes, route->hops, cfg);
+		if (destination == -1)
+			return -1; // some kind of error
+		else
 		{
-			printf("host found\n");
-			exit(EXIT_SUCCESS);
+			/*
+			** Check that we reached our destination host
+			** we only store the lowest number of hops found
+			*/
+			if (destination && route->maxlen > destination)
+				route->maxlen = destination;
 			count++;
 		}
-		else
-			count++;
 	}
 
 	return 0;	
@@ -118,11 +120,11 @@ void log_route(t_config* cfg, t_route* route)
 {
 	t_hop* last_hop = route->hops + route->len;
 
-	while (last_hop->nb_recvd == cfg->opt.nqueries)
+	while (last_hop->nb_recvd == cfg->opt.nqueries && route->len < route->maxlen)
 	{
 		route->len++;
 
-		printf(" %d  ", route->len);
+		printf(" %d/%d  ", route->len, route->maxlen);
 
 		t_probe* p;
 		const char* gateway = NULL;
