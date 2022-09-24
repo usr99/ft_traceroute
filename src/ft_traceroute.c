@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 21:54:10 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 22:18:56 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@ int main(int argc, char** argv)
 		close(config.icmp_sockfd);
 		return 2;
 	}
+
+	// return 0;
 
 	while (route.last_ttl <= config.opt.max_ttl)
 	{
@@ -78,7 +80,7 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 	if (resolve_hostname(&cfg->host, &cfg->opt) == -1)
 		return -1;
 
-	if ((cfg->sockfd = socket(cfg->host.ai_family, cfg->host.ai_socktype, cfg->host.ai_protocol)) == -1)
+	if ((cfg->sockfd = socket(cfg->opt.family, cfg->opt.socktype, cfg->opt.protocol)) == -1)
 		return log_error("failed to create UDP socket");
 
 	if ((cfg->icmp_sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1)
@@ -101,7 +103,7 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 int init_route(t_config* cfg, t_route* route)
 {
 	char address[INET6_ADDRSTRLEN];
-	if (inet_ntop(cfg->host.ai_family, &((struct sockaddr_in*)cfg->host.ai_addr)->sin_addr, address, INET6_ADDRSTRLEN) == NULL)
+	if (inet_ntop(cfg->opt.socktype, &((struct sockaddr_in*)&cfg->host)->sin_addr, address, INET6_ADDRSTRLEN) == NULL)
 		return -1;
 
 	route->len = 0;
@@ -155,13 +157,13 @@ int send_probes(t_config* cfg, t_route* route)
 		** we don't want the host to process the probe
 		** so we send it on an "unlikely" port
 		*/
-		if (cfg->host.ai_family == AF_INET)
-			((struct sockaddr_in*)cfg->host.ai_addr)->sin_port = htons(cfg->opt.port);
+		if (cfg->opt.family == AF_INET)
+			((struct sockaddr_in*)&cfg->host)->sin_port = htons(cfg->opt.port);
 		else
-			((struct sockaddr_in6*)cfg->host.ai_addr)->sin6_port = htons(cfg->opt.port);
+			((struct sockaddr_in6*)&cfg->host)->sin6_port = htons(cfg->opt.port);
 
 		init_probe(current_hop->probes + current_hop->nb_sent, cfg->opt.port); 
-		if (sendto(cfg->sockfd, NULL, 0, 0, cfg->host.ai_addr, cfg->host.ai_addrlen) >= 0)
+		if (sendto(cfg->sockfd, NULL, 0, 0, (struct sockaddr*)&cfg->host, sizeof(struct sockaddr_storage)) >= 0)
 			cfg->opt.port++; // increased for each probe, useful to match them with responses
 		else
 			return -1;

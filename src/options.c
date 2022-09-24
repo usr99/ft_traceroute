@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 17:38:11 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 22:13:26 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@
 
 void init_options_struct(t_cmdline_args* opt)
 {
-	opt->forceIPv6 = false;
 	opt->dns_enabled = true;
+	opt->family = DEFAULT_FAMILY;
 	opt->protocol = DEFAULT_PROTOCOL;
 	opt->socktype = DEFAULT_SOCKTYPE;
 
@@ -64,7 +64,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 				switch (arg.name)
 				{
 					case '6':
-						opt->forceIPv6 = true;
+						opt->family = AF_INET6;
 						break;
 					case 'I':
 						opt->protocol = IPPROTO_ICMP;

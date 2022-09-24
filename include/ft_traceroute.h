@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 21:31:59 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 22:10:04 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 typedef struct s_config
 {
 	t_cmdline_args opt;
-	struct addrinfo host;
+	struct sockaddr_storage host;
 	int sockfd;
 	int icmp_sockfd;
 } t_config;
