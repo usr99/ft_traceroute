@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 20:14:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 21:31:59 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,10 @@ typedef struct s_route
 } t_route;
 
 /* ft_traceroute.c */
-int create_socket(const struct addrinfo* host);
+int setup_tracerouting(int argc, char** argv, t_config* cfg);
+int init_route(t_config* cfg, t_route* route);
+void destroy_route(t_route* route);
+
 int send_probes(t_config* cfg, t_route* route);
 int recv_response(t_config* cfg, t_route* route);
 void log_route(t_config* cfg, t_route* route);

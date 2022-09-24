@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 20:14:25 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 21:54:10 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,111 +17,117 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <sys/time.h>
-#include <netinet/ip_icmp.h>
+#include <linux/ip.h>
+#include <linux/icmp.h>
 #include <errno.h>
 
 #include "ft_traceroute.h"
 #include "probes.h"
 #include "dns.h"
 
+
 int main(int argc, char** argv)
 {
-	t_config conf; /* NEED CLEANUP */
-	if (parse_arguments(argc, argv, &conf.opt) == -1)
+	t_config config;
+	if (setup_tracerouting(argc, argv, &config) == -1)
 		return 2;
 
-	if (getuid() != 0)
+	t_route route;
+	if (init_route(&config, &route) == -1)
 	{
-		log_error("user must have root privileges !");
+		close(config.sockfd);
+		close(config.icmp_sockfd);
 		return 2;
 	}
 
-	if (resolve_hostname(&conf.host, &conf.opt) == -1)
-		return 2;
-	if ((conf.sockfd = create_socket(&conf.host)) == -1)
-		return 2;
-	if ((conf.icmp_sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1)
-		return 2;
-
-	t_route route; /* NEED CLEANUP */
-	route.len = 0;
-	route.last_ttl = conf.opt.first_ttl;
-	route.maxlen = conf.opt.max_ttl - conf.opt.first_ttl + 1;
-	route.hops = ft_calloc(route.maxlen, sizeof(t_hop));
-	if (!route.hops)
-		return 2;
-
-	char address[INET6_ADDRSTRLEN];
-	if (inet_ntop(conf.host.ai_family, &((struct sockaddr_in*)conf.host.ai_addr)->sin_addr, address, INET6_ADDRSTRLEN) == NULL)
-		return 2;
-	printf("traceroute to %s (%s), %d hops max, %d byte packets\n",
-		conf.opt.address, address, conf.opt.max_ttl, conf.opt.packetlen);
-
-	while (route.last_ttl <= conf.opt.max_ttl)
+	while (route.last_ttl <= config.opt.max_ttl)
 	{
-		if (send_probes(&conf, &route) != 0)
+		if (send_probes(&config, &route) != 0)
 		{
 			// behavior not defined yet
 			return 2;
 		}
 
-		if (recv_response(&conf, &route) != 0)
+		if (recv_response(&config, &route) != 0)
 		{
 			// behavior not defined yet
 			return 2;
 		}
-		// debug_route(&route, &conf);
+		// debug_route(&route, &config);
 
-		// debug_route(&route, &conf);
-		log_route(&route, &conf);
+		// debug_route(&route, &config);
+		log_route(&config, &route);
 
-		return 0;
+		break ;
 	}
 
-	close(conf.sockfd);
-	close(conf.icmp_sockfd);
+	close(config.sockfd);
+	close(config.icmp_sockfd);
+	destroy_route(&route);
 	return 0;
 }
 
-int create_socket(const struct addrinfo* host)
+int setup_tracerouting(int argc, char** argv, t_config* cfg)
 {
-	int sockfd;
-	int ret;
+	if (parse_arguments(argc, argv, &cfg->opt) == -1)
+		return -1;
 
-	if ((sockfd = socket(host->ai_family, host->ai_socktype, host->ai_protocol)) != -1)
+	if (getuid() != 0)
+		return log_error("user must have root privileges !");
+
+	if (resolve_hostname(&cfg->host, &cfg->opt) == -1)
+		return -1;
+
+	if ((cfg->sockfd = socket(cfg->host.ai_family, cfg->host.ai_socktype, cfg->host.ai_protocol)) == -1)
+		return log_error("failed to create UDP socket");
+
+	if ((cfg->icmp_sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1)
 	{
-		if (host->ai_protocol == IPPROTO_UDP)
-		{
-			if (host->ai_family == AF_INET)
-			{
-				struct sockaddr_in addr = {
-					.sin_family = AF_INET,
-					.sin_addr.s_addr = INADDR_ANY,
-					.sin_port = 0,
-				};
-				ret = bind(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
-			}
-			else
-			{
-				struct sockaddr_in6 addr = {
-					.sin6_family = AF_INET6,
-					.sin6_addr = in6addr_any,
-					.sin6_port = 0,
-				};
-				ret = bind(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in6));
-			}
-
-			if (ret == -1)
-			{
-				log_error("failed to bind socket");
-				close(sockfd);
-				sockfd = -1;
-			}
-		}
+		close(cfg->sockfd);
+		return log_error("failed to create raw socket");
 	}
-	else
-		log_error("failed to create socket");
-	return sockfd;
+
+	/* Only accepts "Destination Unreachable" and "Time Exceeded" */
+	struct icmp_filter filter = { .data = ~(1 << ICMP_DEST_UNREACH | 1 << ICMP_TIME_EXCEEDED) };
+	if (setsockopt(cfg->icmp_sockfd, IPPROTO_RAW, ICMP_FILTER, &filter, sizeof(struct icmp_filter)) != 0)
+	{
+		close(cfg->sockfd);
+		close(cfg->icmp_sockfd);
+		return log_error("failed to set ICMP filter");
+	}
+	return 0;
+}
+
+int init_route(t_config* cfg, t_route* route)
+{
+	char address[INET6_ADDRSTRLEN];
+	if (inet_ntop(cfg->host.ai_family, &((struct sockaddr_in*)cfg->host.ai_addr)->sin_addr, address, INET6_ADDRSTRLEN) == NULL)
+		return -1;
+
+	route->len = 0;
+	route->last_ttl = cfg->opt.first_ttl;
+	route->maxlen = cfg->opt.max_ttl - cfg->opt.first_ttl + 1;
+
+	route->hops = ft_calloc(route->maxlen, sizeof(t_hop));
+	if (!route->hops)
+		return log_error("Out of memory");
+
+	printf("traceroute to %s (%s), %d hops max, %d byte packets\n",
+		cfg->opt.address, address, cfg->opt.max_ttl, cfg->opt.packetlen);
+	return 0;
+}
+
+void destroy_route(t_route* route)
+{
+	int i;
+	for (i = 0; i < route->maxlen; i++)
+	{
+		if (route->hops[i].probes)
+			free(route->hops[i].probes);
+		else
+			break ;
+	}
+	free(route->hops);
 }
 
 int send_probes(t_config* cfg, t_route* route)
@@ -212,7 +218,10 @@ int recv_response(t_config* cfg, t_route* route)
 		** UDP header is placed after the IP header in the original packet
 		*/
 		struct icmphdr* icmp = (struct icmphdr*)(buf + sizeof(struct iphdr));
-		/* CHECK ICMP MESSAGE */
+
+		// compare checksums
+		// check icmp type
+		// check packet is ours
 
 		uint8_t ttl;
 		uint16_t id;

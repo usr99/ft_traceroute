@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 20:19:46 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/20 21:26:56 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/23 21:09:03 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,6 @@ int resolve_hostname(struct addrinfo* hostname, const t_cmdline_args* opt)
 		}
 	}
 
-	if (!addr_found)
-		log_error("no hosts were found");
 	freeaddrinfo(results);
 	return 0;
 }

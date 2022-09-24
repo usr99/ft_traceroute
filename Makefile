@@ -51,15 +51,11 @@ ${LIBFT}:
 	@echo "${BUILD} libft"
 	@${MAKE} --no-print-directory -C libft
 
-root: ${TARGET}
-	@chown root $<
-	@setcap cap_net_raw=ep $<
-
 ##################################################
 #  				   USUAL RULES					 #./
 ##################################################
 
-all: root
+all: ${TARGET}
 
 clean:
 	@echo "${CLEAN} objects"
