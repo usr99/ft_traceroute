@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 14:45:01 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 18:47:18 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 
 # include "libft.h"
 
-# define N_OPTIONS_SUPPORTED	10
+# define N_OPTIONS_SUPPORTED	11
 
 # define DEFAULT_FAMILY			AF_INET
 # define DEFAULT_PROTOCOL		IPPROTO_UDP

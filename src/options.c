@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/23 22:13:26 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/24 18:50:23 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 		{ .name = 'I', .has_param = false },
 		{ .name = 'T', .has_param = false },
 		{ .name = 'n', .has_param = false },
+		{ .name = 'h', .has_param = false },
 		{ .name = 'f', .has_param = true, .paramtype = PARAM_T_INT64 },
 		{ .name = 'm', .has_param = true, .paramtype = PARAM_T_INT64 },
 		{ .name = 'N', .has_param = true, .paramtype = PARAM_T_INT64 },
@@ -77,6 +78,9 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 					case 'n':
 						opt->dns_enabled = false;
 						break;
+					case 'h':
+						print_usage(argv[0]);
+						break;						
 					case 'f':
 						val = *(int*)arg.value;
 						if (val <= 0)
@@ -124,7 +128,8 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 					opt->address = (char*)arg.value;
 				else if (nparameters == 2)
 				{
-					val = ft_atoi((char*)arg.value);
+					if (ft_strtol((char*)arg.value, (long*)&val) == -1)
+						return log_error("packetlen expect an integer as argument");
 					if (val < PACKETLEN_MIN)
 						val = PACKETLEN_MIN;
 					else if (val > PACKETLEN_MAX)
