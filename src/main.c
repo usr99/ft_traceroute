@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 18:38:39 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/25 19:46:31 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ int init_route(t_config* cfg, t_route* route)
 void destroy_route(t_route* route)
 {
 	int i;
-	for (i = 0; i < route->maxlen; i++)
+	for (i = 0; i < route->last_ttl; i++)
 	{
 		if (route->hops[i].probes)
 			free(route->hops[i].probes);

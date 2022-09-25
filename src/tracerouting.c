@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 19:35:05 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/25 19:47:38 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,10 +85,7 @@ int recv_response(t_config* cfg, t_route* route)
 		if ((ret = select(cfg->icmp_sockfd + 1, &rfds, NULL, NULL, &timeout)) == -1)
 			return -1;
 		else if (ret == 0)
-		{
-			log_error("timeout");
-			return 1; // no replies after timeout
-		}
+			return 0; // no replies after timeout
 
 		/* Receive ICMP message */
 		char buf[100];
@@ -124,7 +121,7 @@ void log_route(t_config* cfg, t_route* route)
 	{
 		route->len++;
 
-		printf(" %d/%d  ", route->len, route->maxlen);
+		printf(" %d  ", route->len);
 
 		t_probe* p;
 		const char* gateway = NULL;
