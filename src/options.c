@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 18:50:23 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 18:00:46 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 	};
 
 	t_argument arg;
+	const char* errmsg = NULL;
 	int ret;
 	int val;
 	int nparameters = 0;
@@ -82,22 +83,16 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 						print_usage(argv[0]);
 						break;						
 					case 'f':
-						val = *(int*)arg.value;
-						if (val <= 0)
-						{
-							free(arg.value);
-							return log_error("first hop out of range");
-						}
-						opt->first_ttl = (uint8_t)val;
+						if (*(int*)arg.value <= 0)
+							errmsg = "first hop out of range";
+						else
+							opt->first_ttl = *(uint8_t*)arg.value;
 						break;
 					case 'm':
-						val = *(int*)arg.value;
-						if (val < 0 || val > 255)
-						{
-							free(arg.value);
-							return log_error("max hops cannot be more than 255");
-						}
-						opt->max_ttl = (uint8_t)val;
+						if (*(int*)arg.value < 0 || *(int*)arg.value > 255)
+							errmsg = "max hops cannot be more than 255";
+						else
+							opt->max_ttl = *(uint8_t*)arg.value;
 						break;
 					case 'N':
 						opt->squeries = *(uint8_t*)arg.value;
@@ -105,22 +100,23 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 					case 'q':
 						opt->nqueries = *(uint8_t*)arg.value;
 						if (opt->nqueries == 0 || opt->nqueries > 10)
-						{
-							free(arg.value);
-							return log_error("no more than 10 probes per hop");
-						}
+							errmsg = "no more than 10 probes per hop";
 						break;
 					case 'p':
 						opt->port = *(uint16_t*)arg.value;
 						break;
 					case 'w':
 						opt->waittime = *(double*)arg.value;
+						if (opt->waittime < 0.)
+							errmsg = "wait time cannot be negative";
 						break;
 					default: // should never happen
 						break;
 				}
 				if (arg.value)
 					free(arg.value);
+				if (errmsg)
+					return log_error(errmsg);
 				break ;
 			case ARG_T_PARAMETER:
 				nparameters++;
@@ -184,12 +180,7 @@ int print_usage(const char* program_name)
 		" -p port\tSet the destination port to use. It is either initial udp port value for \"default\"\n"
 		"\t\tmethod(incremented by each probe, default is 33434),\n"
 		"\t\tor initial seq for \"icmp\"(incremented as well, default from 1)\n"
-		"\t\t -w MAX,HERE,NEAR  --wait=MAX,HERE,NEAR\n"
-		"\t\tWait for a probe no more than HERE (default 3)\n"
-		"\t\ttimes longer than a response from the same hop,\n"
-		"\t\tor no more than NEAR (default 10) times than some\n"
-		"\t\tnext hop, or MAX (default 5.0) seconds (float\n"
-		"\t\tpoint values allowed too)\n"
+		" -w MAX\t\tWait for a probe no more than MAX seconds (default 5.0)\n"
 		" -q nqueries\tSet the number of probes per each hop. Default is 3\n",
 		program_name
 	);
