@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 17:31:47 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 18:16:43 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ int recv_response(t_config* cfg, t_route* route)
 	return 0;	
 }
 
-void log_route(t_config* cfg, t_route* route)
+bool browse_route(t_config* cfg, t_route* route)
 {
 	t_hop* last_hop = route->hops + route->len;
 
@@ -141,5 +141,9 @@ void log_route(t_config* cfg, t_route* route)
 
 		last_hop++;
 		route->len++;
+
+		if (route->len > route->maxlen)
+			return true; // route is complete
 	}
+	return false; // keep tracing the route
 }

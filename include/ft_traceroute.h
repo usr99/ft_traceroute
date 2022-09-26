@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 17:07:40 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 18:16:40 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ void destroy_route(t_route* route);
 /* tracerouting.c */
 int send_probes(t_config* cfg, t_route* route);
 int recv_response(t_config* cfg, t_route* route);
-void log_route(t_config* cfg, t_route* route);
+bool browse_route(t_config* cfg, t_route* route);
 
 /* name_resolution.c */
 int resolve_hostname(struct sockaddr_storage* host, t_cmdline_args* opt);

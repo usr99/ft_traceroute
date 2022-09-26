@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 17:25:58 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 18:29:20 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,8 @@ int main(int argc, char** argv)
 		// debug_route(&route, &config);
 		// return 0;
 
-		log_route(&config, &route);
+		if (browse_route(&config, &route) == true)
+			break; // tracerouting finished
 	}
 
 	// debug_route(&route, &config);
