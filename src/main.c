@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/25 19:46:31 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 17:25:58 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
 	// return 0;
 
-	while (route.last_ttl <= config.opt.max_ttl)
+	while (route.current_ttl <= config.opt.max_ttl)
 	{
 		if (send_probes(&config, &route) != 0)
 		{
@@ -46,11 +46,14 @@ int main(int argc, char** argv)
 		}
 		// debug_route(&route, &config);
 
-		// debug_route(&route, &config);
-		log_route(&config, &route);
 
-		break ;
+		// debug_route(&route, &config);
+		// return 0;
+
+		log_route(&config, &route);
 	}
+
+	// debug_route(&route, &config);
 
 	close(config.sockfd);
 	close(config.icmp_sockfd);
@@ -96,7 +99,7 @@ int init_route(t_config* cfg, t_route* route)
 		return -1;
 
 	route->len = 0;
-	route->last_ttl = cfg->opt.first_ttl - 1;
+	route->current_ttl = cfg->opt.first_ttl;
 	route->maxlen = cfg->opt.max_ttl - cfg->opt.first_ttl + 1;
 
 	route->hops = ft_calloc(route->maxlen, sizeof(t_hop));
@@ -111,7 +114,7 @@ int init_route(t_config* cfg, t_route* route)
 void destroy_route(t_route* route)
 {
 	int i;
-	for (i = 0; i < route->last_ttl; i++)
+	for (i = 0; i < route->current_ttl; i++)
 	{
 		if (route->hops[i].probes)
 			free(route->hops[i].probes);

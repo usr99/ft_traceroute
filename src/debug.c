@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/23 17:37:32 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 14:36:02 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 17:11:46 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void debug_route(const t_route* route, const t_config* cfg)
 {
 	unsigned int i, j;
 
-	for (i = 0; i < route->last_ttl; i++)
+	for (i = 0; i < route->current_ttl; i++)
 	{
 		printf("%d", i + cfg->opt.first_ttl);
 		for (j = 0; j < route->hops[i].nb_sent; j++)

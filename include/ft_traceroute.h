@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 15:15:05 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 17:07:40 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ typedef struct s_config
 typedef struct s_route
 {
 	t_hop* hops;
-	uint8_t last_ttl;
+	uint8_t current_ttl;
 	uint8_t len;
 	uint8_t maxlen;
 } t_route;

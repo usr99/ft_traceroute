@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 19:31:13 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 17:37:25 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,22 +31,24 @@ int process_response(char* payload, size_t len, t_hop* hops, t_config* cfg)
 	if (type == 0)
 		return 0; // ignore packet
 
-	uint8_t ttl;
 	uint16_t id;
 	struct sockaddr_in addr;
-	parse_packet(payload, &addr, &ttl, &id);
+	parse_packet(payload, &addr, &id);
 
-	t_hop* hop = hops + (ttl - cfg->opt.first_ttl);
-	t_probe* gateway = hop->probes + (id - hop->probes->id);
+	size_t index = (id - hops->probes->id);
+	size_t hopidx = index / cfg->opt.nqueries;
+	t_hop* hop = hops + hopidx;
+	t_probe* gateway = hop->probes + index % cfg->opt.nqueries;
 	
 	if (inet_ntop(AF_INET, &addr.sin_addr.s_addr, gateway->address, INET6_ADDRSTRLEN) == NULL)
 		return -1;
+
 	if (getnameinfo((struct sockaddr*)&addr, sizeof(struct sockaddr_in), gateway->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
 		ft_strlcpy(gateway->hostname, gateway->address, INET6_ADDRSTRLEN);
 	gettimeofday(&gateway->time_recvd, NULL);
 
 	hop->nb_recvd++;
-	return (type == ICMP_PORT_UNREACH ? ttl : 0);
+	return (type == ICMP_PORT_UNREACH ? hopidx : 0);
 }
 
 int validate_packet(char* payload, size_t len, t_config* cfg)
@@ -74,16 +76,16 @@ int validate_packet(char* payload, size_t len, t_config* cfg)
 	return icmp->type;
 }
 
-void parse_packet(char* payload, struct sockaddr_in* addr, uint8_t* ttl, uint16_t* id)
+void parse_packet(char* payload, struct sockaddr_in* addr, uint16_t* id)
 {
 	struct iphdr* ip = (struct iphdr*)payload;
 	struct iphdr* origin_ip = (struct iphdr*)(payload + sizeof(struct iphdr) + sizeof(struct icmphdr));
 	struct udphdr* origin_udp = (struct udphdr*)(origin_ip + 1);
 
-	*ttl = origin_ip->ttl;
-	*id = ntohs(origin_udp->dest); // port is used to identify probes
+ 	/* Retrieve original destination UDP port */
+	*id = ntohs(origin_udp->dest);
 
-	/* Retrieve dest */
+	/* Retrieve source address */
 	ft_memset(addr, 0, sizeof(struct sockaddr_in));
 	addr->sin_family = AF_INET;
 	addr->sin_addr.s_addr = ip->saddr;

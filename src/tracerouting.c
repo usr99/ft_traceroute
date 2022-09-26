@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/25 19:47:38 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 17:31:47 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,15 @@
 
 int send_probes(t_config* cfg, t_route* route)
 {
-	t_hop* current_hop = route->hops + (route->last_ttl - cfg->opt.first_ttl) + 1;
+	t_hop* current_hop = route->hops + (route->current_ttl - cfg->opt.first_ttl);
 	int total = 0;
 
 	while (total < cfg->opt.squeries)
 	{
 		if (current_hop->probes == NULL)
 		{
-			route->last_ttl++;
-			if (route->last_ttl > cfg->opt.max_ttl)
-				break ;
+			if (route->current_ttl > cfg->opt.max_ttl)
+				break;
 
 			/* Allocate a new array of probes for the next hop */
 			current_hop->probes = ft_calloc(cfg->opt.nqueries, sizeof(t_probe));
@@ -34,7 +33,7 @@ int send_probes(t_config* cfg, t_route* route)
 				return -1;
 
 			/* Set ttl field for the future packets */
-			if (setsockopt(cfg->sockfd, IPPROTO_IP, IP_TTL, &route->last_ttl, sizeof(uint8_t)) == -1)
+			if (setsockopt(cfg->sockfd, IPPROTO_IP, IP_TTL, &route->current_ttl, sizeof(uint8_t)) == -1)
 				return -1;
 		}
 
@@ -50,7 +49,7 @@ int send_probes(t_config* cfg, t_route* route)
 
 		init_probe(current_hop->probes + current_hop->nb_sent, cfg->opt.port); 
 		if (sendto(cfg->sockfd, NULL, 0, 0, (struct sockaddr*)&cfg->host, sizeof(struct sockaddr_storage)) >= 0)
-			cfg->opt.port++; // increased for each probe, useful to match them with responses
+			cfg->opt.port++; // increased for each probe to match them with responses
 		else
 			return -1;
 
@@ -59,7 +58,10 @@ int send_probes(t_config* cfg, t_route* route)
 
 		/* Increase ttl after sending all probes for current hop */
 		if (current_hop->nb_sent == cfg->opt.nqueries)
+		{
 			current_hop++;
+			route->current_ttl++;
+		}
 	}
 	return 0;
 }
@@ -117,24 +119,27 @@ void log_route(t_config* cfg, t_route* route)
 {
 	t_hop* last_hop = route->hops + route->len;
 
-	while (last_hop->nb_recvd == cfg->opt.nqueries && route->len < route->maxlen)
+	while (last_hop->nb_sent == cfg->opt.nqueries && route->len <= route->maxlen)
 	{
-		route->len++;
-
-		printf(" %d  ", route->len);
+		printf(" %d  ", route->len + cfg->opt.first_ttl);
 
 		t_probe* p;
 		const char* gateway = NULL;
 		for (p = last_hop->probes; p - last_hop->probes < last_hop->nb_sent; p++)
 		{
-			if (!gateway || ft_strncmp(gateway, p->address, INET6_ADDRSTRLEN) != 0)
-				printf("%s (%s) ", p->hostname, p->address);
-			printf(" %.3f ms ", get_duration_ms(&p->time_sent, &p->time_recvd));
-
+			if (ft_strlen(p->address))
+			{
+				if (!gateway || ft_strncmp(gateway, p->address, INET6_ADDRSTRLEN) != 0)
+					printf("%s (%s) ", p->hostname, p->address);
+				printf(" %.3f ms ", get_duration_ms(&p->time_sent, &p->time_recvd));
+			}
+			else
+				printf("* ");
 			gateway = p->address;
 		}
 		printf("\n");
 
 		last_hop++;
+		route->len++;
 	}
 }
