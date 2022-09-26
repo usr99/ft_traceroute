@@ -52,7 +52,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 	};
 
 	t_argument arg;
-	const char* errmsg = NULL;
+	char errmsg[ERRMSG_MAXLEN] = { 0 };
 	int ret;
 	int val;
 	int nparameters = 0;
@@ -84,13 +84,13 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 						break;						
 					case 'f':
 						if (*(int*)arg.value <= 0)
-							errmsg = "first hop out of range";
+							ft_strlcpy(errmsg, "first hop out of range", ERRMSG_MAXLEN);
 						else
 							opt->first_ttl = *(uint8_t*)arg.value;
 						break;
 					case 'm':
 						if (*(int*)arg.value < 0 || *(int*)arg.value > 255)
-							errmsg = "max hops cannot be more than 255";
+							ft_strlcpy(errmsg, "max hops cannot be more than 255", ERRMSG_MAXLEN);
 						else
 							opt->max_ttl = *(uint8_t*)arg.value;
 						break;
@@ -100,7 +100,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 					case 'q':
 						opt->nqueries = *(uint8_t*)arg.value;
 						if (opt->nqueries == 0 || opt->nqueries > 10)
-							errmsg = "no more than 10 probes per hop";
+							ft_strlcpy(errmsg, "no more than 10 probes per hop", ERRMSG_MAXLEN);
 						break;
 					case 'p':
 						opt->port = *(uint16_t*)arg.value;
@@ -125,30 +125,35 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 				else if (nparameters == 2)
 				{
 					if (ft_strtol((char*)arg.value, (long*)&val) == -1)
-						return log_error("packetlen expect an integer as argument");
-					if (val < PACKETLEN_MIN)
+						snprintf(errmsg, ERRMSG_MAXLEN, "Cannot handle \"packetlen\" cmdline arg \'%s\'", (char*)arg.value);
+					else if (val < PACKETLEN_MIN)
 						val = PACKETLEN_MIN;
 					else if (val > PACKETLEN_MAX)
-						return log_error("too big packetlen specified");
+						snprintf(errmsg, ERRMSG_MAXLEN, "too big packetlen %d specified", val);
 					opt->packetlen = val;
 				}
 				else
-					return log_error("too much arguments specified");
+					snprintf(errmsg, ERRMSG_MAXLEN, "Extra arg \'%s\'", (char*)arg.value);
 				break ;
 			case ARG_T_ERROR:
 				switch (arg.errtype)
 				{
 					case ERR_BAD_OPTION:
-						return log_error("Bad option");
+						snprintf(errmsg, ERRMSG_MAXLEN, "Bad option \'-%c\'", arg.name);
+						break ;
 					case ERR_MISSING_PARAM:
-						return log_error("Option requires an argument");
+						snprintf(errmsg, ERRMSG_MAXLEN, "Option \'-%c\' requires an argument", arg.name);
+						break ;
 					case ERR_BAD_PARAM_TYPE:
-						return log_error("Cannot handle option with arg");
+						snprintf(errmsg, ERRMSG_MAXLEN, "Cannot handle option \'-%c\' with arg \'%s\'", arg.name, (char*)arg.value);
+						break ;
 					default: // should never happen
 						break;
 				}
 				break ;
 		}
+		if (*errmsg)
+			return log_error(errmsg);
 	}
 
 	if (ret == -2) // code to indicate memory allocation failure
