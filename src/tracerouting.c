@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 18:16:43 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 19:14:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,8 +70,8 @@ int recv_response(t_config* cfg, t_route* route)
 {
 	fd_set rfds;
 	struct timeval timeout = {
-		.tv_sec = (int)cfg->opt.waittime,
-		.tv_usec = (cfg->opt.waittime - (int)cfg->opt.waittime) * 1000000
+		.tv_sec = (int)cfg->opt.timeout.max,
+		.tv_usec = (cfg->opt.timeout.max - (int)cfg->opt.timeout.max) * 1000000
 	};
 	int count = 0;
 

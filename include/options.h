@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/24 18:47:18 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 19:11:09 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,13 @@
 # define PACKETLEN_MIN			28
 # define PACKETLEN_MAX			65000
 
+typedef struct s_waittime
+{
+	double max;
+	double here;
+	double near;
+} t_waittime;
+
 typedef struct s_cmdline_args
 {
 	bool dns_enabled;
@@ -34,16 +41,16 @@ typedef struct s_cmdline_args
 	uint8_t max_ttl;	// -m
 	uint8_t squeries;	// -N
 	uint16_t port;		// -p
-	uint16_t icmpseq;	// -p
-	double waittime;	// -w
 	uint8_t nqueries;	// -q
+	t_waittime timeout;	// -w
 	
 	char* address;
 	uint16_t packetlen;
 } t_cmdline_args;
 
-void init_options_struct(t_cmdline_args* opt);
+t_cmdline_args init_options_struct();
 int parse_arguments(int argc, char** argv, t_cmdline_args* opt);
+int parse_waittime(char* buffer, t_waittime* result, char* errmsg);
 int print_usage();
 
 #endif

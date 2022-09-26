@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 18:00:46 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 19:34:41 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,23 +16,16 @@
 #include "ft_traceroute.h"
 #include "options.h"
 
-void init_options_struct(t_cmdline_args* opt)
+t_cmdline_args init_options_struct()
 {
-	opt->dns_enabled = true;
-	opt->family = DEFAULT_FAMILY;
-	opt->protocol = DEFAULT_PROTOCOL;
-	opt->socktype = DEFAULT_SOCKTYPE;
-
-	opt->first_ttl = DEFAULT_FIRST_TTL;
-	opt->max_ttl = DEFAULT_MAX_TTL;
-	opt->squeries = DEFAULT_SQUERIES;
-	opt->port = DEFAULT_PORT;
-	opt->icmpseq = DEFAULT_IMCP_SEQ;
-	opt->waittime = DEFAULT_WAITTIME;
-	opt->nqueries = DEFAULT_NQUERIES;
-
-	opt->address = NULL;
-	opt->packetlen = DEFAULT_PACKETLEN;
+	t_cmdline_args result = {
+		.family = AF_INET, .protocol = IPPROTO_UDP, .socktype = SOCK_DGRAM,
+		.first_ttl = 1, .max_ttl = 30,
+		.squeries = 16, .nqueries = 3,
+		.port = 33434, .timeout = { 5.0f, 3.0f, 10.0f },
+		.address = NULL, .packetlen = 60, .dns_enabled = true
+	};
+	return result;
 }
 
 int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
@@ -48,7 +41,7 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 		{ .name = 'N', .has_param = true, .paramtype = PARAM_T_INT64 },
 		{ .name = 'q', .has_param = true, .paramtype = PARAM_T_INT64 },
 		{ .name = 'p', .has_param = true, .paramtype = PARAM_T_INT64 },
-		{ .name = 'w', .has_param = true, .paramtype = PARAM_T_FLOAT64 }
+		{ .name = 'w', .has_param = true, .paramtype = PARAM_T_STRING }
 	};
 
 	t_argument arg;
@@ -57,7 +50,6 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 	int val;
 	int nparameters = 0;
 
-	init_options_struct(opt);
 	while ((ret = ft_getarg(argc, argv, valid_options, N_OPTIONS_SUPPORTED, &arg)) == 0)
 	{
 		switch (arg.type)
@@ -106,17 +98,13 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 						opt->port = *(uint16_t*)arg.value;
 						break;
 					case 'w':
-						opt->waittime = *(double*)arg.value;
-						if (opt->waittime < 0.)
-							errmsg = "wait time cannot be negative";
+						parse_waittime(arg.value, &opt->timeout, errmsg);
 						break;
 					default: // should never happen
 						break;
 				}
 				if (arg.value)
 					free(arg.value);
-				if (errmsg)
-					return log_error(errmsg);
 				break ;
 			case ARG_T_PARAMETER:
 				nparameters++;
@@ -169,6 +157,37 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 	return 0;
 }
 
+int parse_waittime(char* buffer, t_waittime* result, char* errmsg)
+{
+	double* time = (double*)result;
+	size_t start = 0;
+	size_t i;
+
+	for (i = 0; buffer[i]; i++)
+	{
+		if (buffer[i] == ',' || buffer[i] == '/')
+		{
+			char tmp = buffer[i];
+			buffer[i] = '\0';
+
+			int ret = ft_strtof(buffer + start, time);
+			buffer[i] = tmp;
+			if (ret == -1)
+				return sprintf(errmsg, "Cannot handle \'-w\' option with arg \'%s\'", buffer);
+			
+			start = i + 1;
+			time++;
+		}
+	}
+	if (ft_strtof(buffer + start, time) != 0)
+		return sprintf(errmsg, "Cannot handle \'-w\' option with arg \'%s\'", buffer);
+
+	if (result->max < 0. || result->here < 0. || result->near < 0.)
+		return sprintf(errmsg, "bad wait specifications \'%.3f,%.3f,%.3f\' used", result->max, result->here, result->near);
+
+	return NULL;
+}
+
 int print_usage(const char* program_name)
 {
 	dprintf(STDERR_FILENO,
@@ -176,16 +195,20 @@ int print_usage(const char* program_name)
 		" %s [ -6In ][ -f first_ttl ] [ -m max_ttl ] [ -N squeries ] [ -p port ]"
 		"[ -w MAX,HERE,NEAR ] [ -q nqueries ] host [ packetlen ]\n\n"
 		"Options:\n"
-		" -6 \t\tUse IPv6\n"
-		" -f first_ttl\tStart from the first_ttl hop (instead of 1)\n"
-		" -I \t\tUse ICMP ECHO for tracerouting\n"
-		" -m max_ttl\tSet the max number of hops (max TTL to be reached). Default is 30\n"
-		" -N squeries\tSet the number of probes to be tried simultaneously (default is 16)\n"
-		" -n \t\tDo not resolve IP addresses to their domain names\n"
-		" -p port\tSet the destination port to use. It is either initial udp port value for \"default\"\n"
-		"\t\tmethod(incremented by each probe, default is 33434),\n"
-		"\t\tor initial seq for \"icmp\"(incremented as well, default from 1)\n"
-		" -w MAX\t\tWait for a probe no more than MAX seconds (default 5.0)\n"
+		" -6 \t\t\tUse IPv6\n"
+		" -f first_ttl\t\tStart from the first_ttl hop (instead of 1)\n"
+		" -I \t\t\tUse ICMP ECHO for tracerouting\n"
+		" -m max_ttl\t\tSet the max number of hops (max TTL to be reached). Default is 30\n"
+		" -N squeries\t\tSet the number of probes to be tried simultaneously (default is 16)\n"
+		" -n \t\t\tDo not resolve IP addresses to their domain names\n"
+		" -p port\t\tSet the destination port to use. It is either initial udp port value for \"default\"\n"
+		"\t\t\tmethod(incremented by each probe, default is 33434),\n"
+		"\t\t\tor initial seq for \"icmp\" (incremented as well, default from 1)\n"
+		" -w max[,here,near]\tDetermines how long to wait for a response to a probe.\n"
+		"\t\t\tmax specifies the maximum time (in seconds, default 5.0) to wait, in any case.\n"
+		"\t\t\there (default 3.0) specifies a factor to multiply the round trip time of an already received response from the same hop.\n"
+		"\t\t\tthe resulting value is used as a timeout for the probe, instead of (but no more than) max.\n"
+		"\t\t\tnear (default 10.0) specifies a similar factor for a response from some next hop.\n"
 		" -q nqueries\tSet the number of probes per each hop. Default is 3\n",
 		program_name
 	);

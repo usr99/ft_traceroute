@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/23 17:37:32 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 17:11:46 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 19:16:17 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,7 @@ void debug_options(t_cmdline_args* opt)
 	printf("-m = %d\n", opt->max_ttl);
 	printf("-N = %d\n", opt->squeries);
 	printf("-p UDP = %d\n", opt->port);
-	printf("-p ICMP = %d\n", opt->icmpseq);
-	printf("-w = %f\n", opt->waittime);
+	printf("-w = %f/%f/%f\n", opt->timeout.max, opt->timeout.here, opt->timeout.near);
 	printf("-q = %d\n", opt->nqueries);
 
 	printf("address = %s\n", opt->address);
