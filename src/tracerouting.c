@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/27 00:10:51 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/27 00:37:16 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,10 +144,10 @@ bool browse_route(t_config* cfg, t_route* route)
 
 void check_timeout(t_config* cfg, t_route* route, uint8_t *count)
 {
-	static float near = -1.f;
-	static float here;
-
+	float near = -1.f;
+	float here;
 	float elapsed_time;
+
 	t_probe* probe;
 	int i;
 	unsigned int j;
@@ -168,22 +168,19 @@ void check_timeout(t_config* cfg, t_route* route, uint8_t *count)
 			}
 			else if (probe->status != TIMED_OUT)
 			{
+				float timeout = cfg->opt.timeout.max * 1000.f;
 				elapsed_time = get_duration_from_now(&probe->time_sent);
-				// if (cfg->opt.timeout.here && here != -1.f)
-				// {
-				// 	if (elapsed_time > here * cfg->opt.timeout.here)
-				// 		probe->status = TIMED_OUT;
-				// }
-				// if (cfg->opt.timeout.near && near != -1.f)
-				// {
-				// 	if (elapsed_time > here * cfg->opt.timeout.near)
-				// 		probe->status = TIMED_OUT;
-				// }
-				if (elapsed_time > cfg->opt.timeout.max * 1000.f)
-					probe->status = TIMED_OUT;
 
-				if (probe->status == TIMED_OUT)
+				if (here != -1.f && timeout > here * cfg->opt.timeout.here)
+					timeout = here * cfg->opt.timeout.here;
+				if (near != -1.f && timeout > near * cfg->opt.timeout.near)
+					timeout = near * cfg->opt.timeout.near;
+
+				if (elapsed_time > timeout)
+				{
+					probe->status = TIMED_OUT;
 					(*count)++;
+				}
 			}
 		}
 	}
