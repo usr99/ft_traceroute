@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 19:34:41 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 21:13:55 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -163,6 +163,7 @@ int parse_waittime(char* buffer, t_waittime* result, char* errmsg)
 	size_t start = 0;
 	size_t i;
 
+	ft_memset(result, 0, sizeof(t_waittime));
 	for (i = 0; buffer[i]; i++)
 	{
 		if (buffer[i] == ',' || buffer[i] == '/')
@@ -185,7 +186,7 @@ int parse_waittime(char* buffer, t_waittime* result, char* errmsg)
 	if (result->max < 0. || result->here < 0. || result->near < 0.)
 		return sprintf(errmsg, "bad wait specifications \'%.3f,%.3f,%.3f\' used", result->max, result->here, result->near);
 
-	return NULL;
+	return 0;
 }
 
 int print_usage(const char* program_name)

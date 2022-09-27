@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/23 17:37:32 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 19:16:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 21:35:05 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,14 +40,17 @@ void debug_route(const t_route* route, const t_config* cfg)
 		printf("%d", i + cfg->opt.first_ttl);
 		for (j = 0; j < route->hops[i].nb_sent; j++)
 		{
-			printf("\tid=%d from %s (%s) %.3f\n",
-				route->hops[i].probes[j].id,
-				route->hops[i].probes[j].hostname,
-				route->hops[i].probes[j].address,
-				get_duration_ms(
-					&route->hops[i].probes[j].time_sent,
-					&route->hops[i].probes[j].time_recvd
-			));
+			printf("\tid=%d", route->hops[i].probes[j].id);
+			if (route->hops[i].probes[j].status == SUCCESS)
+			{
+				printf(" from %s (%s) %.3f\n",
+					route->hops[i].probes[j].hostname,
+					route->hops[i].probes[j].address,
+					route->hops[i].probes[j].rtt
+				);
+			}
+			else if (route->hops[i].probes[j].status == TIMED_OUT)
+				printf(" TIMEOUT\n");
 		}
 		printf("\n");
 	}

@@ -6,13 +6,15 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 19:14:12 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/27 00:10:51 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <linux/ip.h>
 #include <linux/icmp.h>
 #include <stdio.h>
+#include <errno.h>
+
 #include "ft_traceroute.h"
 
 int send_probes(t_config* cfg, t_route* route)
@@ -68,47 +70,39 @@ int send_probes(t_config* cfg, t_route* route)
 
 int recv_response(t_config* cfg, t_route* route)
 {
-	fd_set rfds;
-	struct timeval timeout = {
-		.tv_sec = (int)cfg->opt.timeout.max,
-		.tv_usec = (cfg->opt.timeout.max - (int)cfg->opt.timeout.max) * 1000000
-	};
-	int count = 0;
+	char buf[100];
+	struct sockaddr_storage address;
+	socklen_t addrlen;
+	ssize_t bytes;
 
+	int destination;
+	uint8_t count = 0;
 	while (count < cfg->opt.squeries)
 	{
-		/*
-		** Block until there is input to read from ICMP socket
-		** or until the timeout expires (defined by -w option)
-		*/
-		int ret;
-		FD_ZERO(&rfds);
-		FD_SET(cfg->icmp_sockfd, &rfds);
-		if ((ret = select(cfg->icmp_sockfd + 1, &rfds, NULL, NULL, &timeout)) == -1)
-			return -1;
-		else if (ret == 0)
-			return 0; // no replies after timeout
-
-		/* Receive ICMP message */
-		char buf[100];
-		struct sockaddr_storage address;
-		socklen_t addrlen = sizeof(address);
-		ssize_t bytes = recvfrom(cfg->icmp_sockfd, buf, sizeof(buf), 0, (struct sockaddr*)&address, &addrlen);
+		addrlen = sizeof(address);
+		bytes = recvfrom(cfg->icmp_sockfd, buf, sizeof(buf), 0, (struct sockaddr*)&address, &addrlen);
 		if (bytes == -1)
-			return -1;
+		{
+			if (errno != EAGAIN)
+				return -1;
 
-		int destination = process_response(buf, bytes, route->hops, cfg);
-		if (destination == -1)
-			return -1; // some kind of error
+			check_timeout(cfg, route, &count);
+		}
 		else
 		{
-			/*
-			** Check that we reached our destination host
-			** we only store the lowest number of hops found
-			*/
-			if (destination && route->maxlen > destination)
-				route->maxlen = destination;
-			count++;
+			destination = process_response(buf, bytes, route->hops, cfg);
+			if (destination == -1)
+				return -1; // some kind of error
+			else
+			{
+				/*
+				** Check that we reached our destination host
+				** we only store the lowest number of hops found
+				*/
+				if (destination && route->maxlen > destination)
+					route->maxlen = destination - 1;
+				count++;
+			}
 		}
 	}
 
@@ -127,11 +121,11 @@ bool browse_route(t_config* cfg, t_route* route)
 		const char* gateway = NULL;
 		for (p = last_hop->probes; p - last_hop->probes < last_hop->nb_sent; p++)
 		{
-			if (ft_strlen(p->address))
+			if (p->status == SUCCESS)
 			{
 				if (!gateway || ft_strncmp(gateway, p->address, INET6_ADDRSTRLEN) != 0)
 					printf("%s (%s) ", p->hostname, p->address);
-				printf(" %.3f ms ", get_duration_ms(&p->time_sent, &p->time_recvd));
+				printf(" %.3f ms ", p->rtt);
 			}
 			else
 				printf("* ");
@@ -147,3 +141,51 @@ bool browse_route(t_config* cfg, t_route* route)
 	}
 	return false; // keep tracing the route
 }
+
+void check_timeout(t_config* cfg, t_route* route, uint8_t *count)
+{
+	static float near = -1.f;
+	static float here;
+
+	float elapsed_time;
+	t_probe* probe;
+	int i;
+	unsigned int j;
+
+	for (i = route->current_ttl - cfg->opt.first_ttl; i >= route->len; i--)
+	{		
+		here = -1.f;
+		for (j = 0; j < route->hops[i].nb_sent; j++)
+		{
+			probe = route->hops[i].probes + j;
+
+			if (probe->status == SUCCESS)
+			{
+				if (here == -1.f || probe->rtt < here)
+					here = probe->rtt;
+				if (near == -1.f || probe->rtt < near)
+					near = probe->rtt;
+			}
+			else if (probe->status != TIMED_OUT)
+			{
+				elapsed_time = get_duration_from_now(&probe->time_sent);
+				// if (cfg->opt.timeout.here && here != -1.f)
+				// {
+				// 	if (elapsed_time > here * cfg->opt.timeout.here)
+				// 		probe->status = TIMED_OUT;
+				// }
+				// if (cfg->opt.timeout.near && near != -1.f)
+				// {
+				// 	if (elapsed_time > here * cfg->opt.timeout.near)
+				// 		probe->status = TIMED_OUT;
+				// }
+				if (elapsed_time > cfg->opt.timeout.max * 1000.f)
+					probe->status = TIMED_OUT;
+
+				if (probe->status == TIMED_OUT)
+					(*count)++;
+			}
+		}
+	}
+}
+

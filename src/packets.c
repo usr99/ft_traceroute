@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 17:37:25 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 23:47:37 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 
 void init_probe(t_probe* ptr, uint16_t id)
 {
+	ptr->status = WAITING_REPLY;
 	ptr->id = id;
 	gettimeofday(&ptr->time_sent, NULL);
 }
@@ -45,10 +46,11 @@ int process_response(char* payload, size_t len, t_hop* hops, t_config* cfg)
 
 	if (getnameinfo((struct sockaddr*)&addr, sizeof(struct sockaddr_in), gateway->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
 		ft_strlcpy(gateway->hostname, gateway->address, INET6_ADDRSTRLEN);
-	gettimeofday(&gateway->time_recvd, NULL);
+	gateway->rtt = get_duration_from_now(&gateway->time_sent);
+	gateway->status = SUCCESS;
 
 	hop->nb_recvd++;
-	return (type == ICMP_PORT_UNREACH ? hopidx : 0);
+	return (type == ICMP_PORT_UNREACH ? hopidx + 1 : 0);
 }
 
 int validate_packet(char* payload, size_t len, t_config* cfg)

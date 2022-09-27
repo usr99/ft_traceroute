@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:19:09 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 17:35:56 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/26 21:00:34 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,22 @@
 struct s_config;
 typedef struct s_config t_config;
 
+typedef enum e_probe_state
+{
+	WAITING_REPLY,
+	TIMED_OUT,
+	SUCCESS
+} t_probe_state;
+
 typedef struct s_probe
 {
+	t_probe_state status;
+
 	/* Set after recvfrom() */
 	char hostname[HOST_NAME_MAX];
 	char address[INET6_ADDRSTRLEN];
-	struct timeval time_recvd;
-	
+	float rtt;
+
 	/* Set after sendto() */
 	struct timeval time_sent;
 	uint16_t id;

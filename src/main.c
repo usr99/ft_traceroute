@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 18:29:20 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/27 00:00:09 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,6 @@ int main(int argc, char** argv)
 		return 2;
 	}
 
-	// return 0;
-
 	while (route.current_ttl <= config.opt.max_ttl)
 	{
 		if (send_probes(&config, &route) != 0)
@@ -44,12 +42,7 @@ int main(int argc, char** argv)
 			// behavior not defined yet
 			return 2;
 		}
-		// debug_route(&route, &config);
-
-
-		// debug_route(&route, &config);
-		// return 0;
-
+		
 		if (browse_route(&config, &route) == true)
 			break; // tracerouting finished
 	}
@@ -64,6 +57,7 @@ int main(int argc, char** argv)
 
 int setup_tracerouting(int argc, char** argv, t_config* cfg)
 {
+	cfg->opt = init_options_struct();
 	if (parse_arguments(argc, argv, &cfg->opt) == -1)
 		return -1;
 
@@ -76,7 +70,7 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 	if ((cfg->sockfd = socket(cfg->opt.family, cfg->opt.socktype, cfg->opt.protocol)) == -1)
 		return log_error("failed to create UDP socket");
 
-	if ((cfg->icmp_sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1)
+	if ((cfg->icmp_sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP)) == -1)
 	{
 		close(cfg->sockfd);
 		return log_error("failed to create raw socket");
