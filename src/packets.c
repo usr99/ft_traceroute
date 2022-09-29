@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 23:47:37 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/27 21:29:05 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,47 +26,25 @@ void init_probe(t_probe* ptr, uint16_t id)
 	gettimeofday(&ptr->time_sent, NULL);
 }
 
-int process_response(char* payload, size_t len, t_hop* hops, t_config* cfg)
-{
-	int type = validate_packet(payload, len, cfg);
-	if (type == 0)
-		return 0; // ignore packet
-
-	uint16_t id;
-	struct sockaddr_in addr;
-	parse_packet(payload, &addr, &id);
-
-	size_t index = (id - hops->probes->id);
-	size_t hopidx = index / cfg->opt.nqueries;
-	t_hop* hop = hops + hopidx;
-	t_probe* gateway = hop->probes + index % cfg->opt.nqueries;
-	
-	if (inet_ntop(AF_INET, &addr.sin_addr.s_addr, gateway->address, INET6_ADDRSTRLEN) == NULL)
-		return -1;
-
-	if (getnameinfo((struct sockaddr*)&addr, sizeof(struct sockaddr_in), gateway->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
-		ft_strlcpy(gateway->hostname, gateway->address, INET6_ADDRSTRLEN);
-	gateway->rtt = get_duration_from_now(&gateway->time_sent);
-	gateway->status = SUCCESS;
-
-	hop->nb_recvd++;
-	return (type == ICMP_PORT_UNREACH ? hopidx + 1 : 0);
-}
-
 int validate_packet(char* payload, size_t len, t_config* cfg)
 {
+	/*
+	** Packets should have at least IP + ICMP headers
+	** with IP + UDP headers from original datagram
+	*/
 	static size_t min_packetlen = sizeof(struct iphdr) * 2 + sizeof(struct icmphdr) + sizeof(struct udphdr);
 	if (len < min_packetlen)
 		return 0;
 
+	/* Check data integrity */
 	struct iphdr* ip = (struct iphdr*)payload;
 	if (compare_checksums((uint16_t*)ip, sizeof(struct iphdr), &ip->check) == -1)
 		return 0;
-	
 	struct icmphdr* icmp = (struct icmphdr*)(ip + 1);
 	if (compare_checksums((uint16_t*)icmp, len - sizeof(struct iphdr), &icmp->checksum) == -1)
 		return 0;
 
+	/* Discard all messages that are not TIME_EXCEEDED or PORT_UNREACHABLE */
 	if (icmp->type == ICMP_DEST_UNREACH && icmp->code != ICMP_PORT_UNREACH)
 		return 0;
 

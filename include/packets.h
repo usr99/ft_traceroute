@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:19:09 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 21:00:34 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/27 21:29:08 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <stdint.h>
 # include <limits.h>
 # include <time.h>
+# include <stdbool.h>
 
 struct s_config;
 typedef struct s_config t_config;
@@ -47,11 +48,12 @@ typedef struct s_hop
 	t_probe* probes;
 	unsigned int nb_sent;
 	unsigned int nb_recvd;
+	bool is_destination;
 } t_hop;
+
 
 void init_probe(t_probe* ptr, uint16_t id);
 
-int process_response(char* payload, size_t len, t_hop* hops, t_config* cfg);
 int validate_packet(char* payload, size_t len, t_config* cfg);
 void parse_packet(char* payload, struct sockaddr_in* addr, uint16_t* id);
 uint16_t compute_checksum(uint16_t* data, size_t bytes);

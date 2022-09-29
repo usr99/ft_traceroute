@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/27 00:00:09 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 14:29:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,23 +28,25 @@ int main(int argc, char** argv)
 		close(config.icmp_sockfd);
 		return 2;
 	}
+ 	
+	/* count of probes currently waiting for reply */
+	unsigned int nprobes = 0; // must never exceed <squeries> (set with -N, default 16)
 
-	while (route.current_ttl <= config.opt.max_ttl)
+	bool host_found = false;
+	while (!host_found)
 	{
-		if (send_probes(&config, &route) != 0)
+		if (send_probes(&config, &route, &nprobes) != 0)
 		{
-			// behavior not defined yet
-			return 2;
+			printf("fatal error\n");
+			break; // fatal error
 		}
-
-		if (recv_response(&config, &route) != 0)
+		if (recv_response(&config, &route, &nprobes) != 0)
 		{
-			// behavior not defined yet
-			return 2;
+			printf("fatal error\n");
+			break; // fatal error
 		}
 		
-		if (browse_route(&config, &route) == true)
-			break; // tracerouting finished
+		host_found = browse_route(&config, &route);
 	}
 
 	// debug_route(&route, &config);
