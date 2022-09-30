@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 16:47:42 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 23:31:13 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,7 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 		return 0;
 	}
 
+
 	/*
 	** Raw sockets receive a copy of every ICMP messages
 	** so we need to check that this packet really belongs to us
@@ -91,6 +92,7 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 	int type = validate_packet(buf, bytes, cfg);
 	if (type == 0)
 		return 0; // ignore packet
+
 
 	/*
 	** Extract useful information from the packet

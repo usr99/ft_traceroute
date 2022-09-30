@@ -6,11 +6,12 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 16:31:12 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 23:29:35 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <linux/icmp.h>
+#include <netinet/icmp6.h>
 #include <stdio.h>
 
 #include "ft_traceroute.h"
@@ -72,16 +73,37 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 	if ((cfg->sockfd = socket(cfg->opt.family, cfg->opt.socktype, cfg->opt.protocol)) == -1)
 		return log_error("failed to create UDP socket");
 
-	if ((cfg->icmp_sockfd = socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK, IPPROTO_ICMP)) == -1)
+	int protocol = (cfg->host.ss_family == AF_INET) ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+	if ((cfg->icmp_sockfd = socket(cfg->host.ss_family, SOCK_RAW | SOCK_NONBLOCK, protocol)) == -1)
 	{
 		close(cfg->sockfd);
-		return log_error("failed to create raw socket");
+		return log_error("failed to create ICMP socket");
 	}
 
 	/* Only accepts "Destination Unreachable" and "Time Exceeded" */
-	struct icmp_filter filter = { .data = ~(1 << ICMP_DEST_UNREACH | 1 << ICMP_TIME_EXCEEDED) };
-	if (setsockopt(cfg->icmp_sockfd, IPPROTO_RAW, ICMP_FILTER, &filter, sizeof(struct icmp_filter)) != 0)
+	struct icmp_filter filterv4 = { .data = ~(1 << ICMP_DEST_UNREACH | 1 << ICMP_TIME_EXCEEDED) };
+	struct icmp6_filter filterv6;
+	
+	void* filter_ptr;
+	size_t filter_size;
+	if (cfg->host.ss_family == AF_INET)
 	{
+		filter_size = sizeof(struct icmp_filter);
+		filter_ptr = &filterv4;
+	}
+	else
+	{
+		ICMP6_FILTER_SETBLOCKALL(&filterv6);
+		ICMP6_FILTER_SETPASS(ICMP6_DST_UNREACH, &filterv6);
+		ICMP6_FILTER_SETPASS(ICMP6_TIME_EXCEEDED, &filterv6);
+
+		filter_size = sizeof(struct icmp6_filter);
+		filter_ptr = &filterv6;
+	}
+
+	if (setsockopt(cfg->icmp_sockfd, protocol, ICMP_FILTER, filter_ptr, filter_size) != 0)
+	{
+		perror("setsockopt");
 		close(cfg->sockfd);
 		close(cfg->icmp_sockfd);
 		return log_error("failed to set ICMP filter");

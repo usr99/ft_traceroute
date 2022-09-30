@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 16:36:09 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 23:34:50 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int validate_packet(char* payload, size_t len, t_config* cfg)
 	** with IP + UDP headers from original datagram
 	*/
 	static const size_t min_packetlen_ipv4 = sizeof(struct iphdr) * 2 + sizeof(struct icmphdr) + sizeof(struct udphdr);
-	static const size_t min_packetlen_ipv6 = sizeof(struct ip6_hdr) * 2 + sizeof(struct icmp6_hdr) + sizeof(struct udphdr);
+	static const size_t min_packetlen_ipv6 = sizeof(struct ip6_hdr) + sizeof(struct udphdr);
 
 	size_t sizehdr;
 	if (cfg->host.ss_family == AF_INET)
@@ -93,8 +93,8 @@ void parse_packet(char* payload, struct sockaddr_storage* addr, uint16_t* id)
 	}
 	else
 	{
-		struct ip6_hdr* ip = (struct ip6_hdr*)payload;
-		struct ip6_hdr* origin_ip = (struct ip6_hdr*)(payload + sizeof(struct ip6_hdr) + sizeof(struct icmp6_hdr));
+		struct icmp6_hdr* icmp6 = (struct icmp6_hdr*)payload;
+		struct ip6_hdr* origin_ip = (struct ip6_hdr*)(icmp6 + 1);
 		origin_udp = (struct udphdr*)(origin_ip + 1);
 		*(__int128_t*)((struct sockaddr_in6*)addr)->sin6_addr.__in6_u.__u6_addr32 = *(__int128_t*)ip->ip6_src.__in6_u.__u6_addr32; // retrieve source address
 	}
