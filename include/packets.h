@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:19:09 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/27 21:29:08 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 15:39:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ typedef struct s_hop
 void init_probe(t_probe* ptr, uint16_t id);
 
 int validate_packet(char* payload, size_t len, t_config* cfg);
-void parse_packet(char* payload, struct sockaddr_in* addr, uint16_t* id);
+void parse_packet(char* payload, struct sockaddr_storage* addr, uint16_t* id);
 uint16_t compute_checksum(uint16_t* data, size_t bytes);
 int compare_checksums(uint16_t* data, size_t bytes, uint16_t* cs);
 

@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 14:26:17 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 16:30:40 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,8 @@ int fetch_hostname(const struct sockaddr* addr, t_probe* gateway);
 int log_error(const char* message);
 float get_duration_from_now(struct timeval* from);
 float get_duration_ms(struct timeval* from, struct timeval* to);
+int addr_to_text(const struct sockaddr_storage* addr, char* buffer);
+__int128_t get_address(struct sockaddr_storage* address);
 
 /* debug.c */
 void debug_options(t_cmdline_args* opt);

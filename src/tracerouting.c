@@ -6,12 +6,11 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 14:27:37 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/09/29 16:47:42 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <linux/ip.h>
-#include <linux/icmp.h>
+#include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -72,13 +71,10 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 {
 	char buf[100];
-	struct sockaddr_storage address;
-	socklen_t addrlen;
 	ssize_t bytes;
 
 	/* Try to receive a response to one of the probes sent */
-	addrlen = sizeof(address);
-	bytes = recvfrom(cfg->icmp_sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&address, &addrlen);
+	bytes = recvfrom(cfg->icmp_sockfd, buf, sizeof(buf), 0, NULL, 0);
 	if (bytes == -1) // no response
 	{
 		if (errno != EAGAIN)
@@ -102,7 +98,8 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 	** and the source ip address
 	*/
 	uint16_t id;
-	struct sockaddr_in addr;
+	struct sockaddr_storage addr = {0};
+	addr.ss_family = cfg->host.ss_family;
 	parse_packet(buf, &addr, &id);
 
 	/* Match the id found with our probes */
@@ -117,7 +114,7 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 		hop->is_destination = true;
 
 	/* Save source address as a string and perform a reverse dns lookup to retrieve hostname if any */
-	if (inet_ntop(AF_INET, &addr.sin_addr.s_addr, gateway->address, INET6_ADDRSTRLEN) == NULL)
+	if (addr_to_text(&addr, gateway->address) == -1)
 		return -1;
 	// if (getnameinfo((struct sockaddr*)&addr, sizeof(struct sockaddr_in), gateway->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
 	// {
