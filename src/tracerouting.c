@@ -6,10 +6,11 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 23:31:13 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/01 00:44:56 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <netinet/icmp6.h>
 #include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <errno.h>
@@ -33,8 +34,16 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 			return -1;
 
 		/* Set ttl field for the future packets */
-		if (setsockopt(cfg->sockfd, IPPROTO_IP, IP_TTL, &route->current_ttl, sizeof(uint8_t)) == -1)
+		int ret;
+		if (cfg->opt.family == AF_INET)
+			ret = setsockopt(cfg->sockfd, IPPROTO_IP, IP_TTL, &route->current_ttl, sizeof(int));
+		else
+			ret = setsockopt(cfg->sockfd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &route->current_ttl, sizeof(int));
+		if (ret == -1)
+		{
+			perror("setsockopt");
 			return -1;
+	}
 	}
 
 	/*
@@ -70,41 +79,31 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 
 int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 {
+	struct sockaddr_storage addr;
+	socklen_t addrlen = sizeof(struct sockaddr_storage);
 	char buf[100];
 	ssize_t bytes;
 
 	/* Try to receive a response to one of the probes sent */
-	bytes = recvfrom(cfg->icmp_sockfd, buf, sizeof(buf), 0, NULL, 0);
+	bytes = recvfrom(cfg->icmp_sockfd, buf, sizeof(buf), 0, (struct sockaddr*)&addr, &addrlen);
 	if (bytes == -1) // no response
 	{
 		if (errno != EAGAIN)
 			return -1; // failure
-		
 		*nprobes -= check_timeout(cfg, route);
 		return 0;
 	}
-
 
 	/*
 	** Raw sockets receive a copy of every ICMP messages
 	** so we need to check that this packet really belongs to us
 	*/
-	int type = validate_packet(buf, bytes, cfg);
+	uint8_t type = validate_packet(buf, bytes, cfg);
 	if (type == 0)
 		return 0; // ignore packet
 
-
-	/*
-	** Extract useful information from the packet
-	** the destination port used in the original datagram
-	** and the source ip address
-	*/
-	uint16_t id;
-	struct sockaddr_storage addr = {0};
-	addr.ss_family = cfg->host.ss_family;
-	parse_packet(buf, &addr, &id);
-
 	/* Match the id found with our probes */
+	uint16_t id = extract_probe_id(buf, &addr);
 	size_t probeidx = (id - route->hops->probes->id);
 	t_hop* hop = route->hops + (probeidx / cfg->opt.nqueries);
 	t_probe* gateway = hop->probes + (probeidx % cfg->opt.nqueries);
@@ -112,16 +111,16 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 	/* Update probe status */
 	gateway->status = SUCCESS;
 	gateway->rtt = get_duration_from_now(&gateway->time_sent);
-	if (type == ICMP_PORT_UNREACH)
+	if (cfg->opt.family == AF_INET && type == ICMP_PORT_UNREACH)
+		hop->is_destination = true;
+	else if (cfg->opt.family == AF_INET6 && type == ICMP6_DST_UNREACH_NOPORT)
 		hop->is_destination = true;
 
 	/* Save source address as a string and perform a reverse dns lookup to retrieve hostname if any */
 	if (addr_to_text(&addr, gateway->address) == -1)
 		return -1;
 	// if (getnameinfo((struct sockaddr*)&addr, sizeof(struct sockaddr_in), gateway->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
-	// {
-		ft_strlcpy(gateway->hostname, gateway->address, INET6_ADDRSTRLEN); // copy ip address if dns lookup fails
-	// }
+		// ft_strlcpy(gateway->hostname, gateway->address, INET6_ADDRSTRLEN); // copy ip address if dns lookup fails
 
 	hop->nb_recvd++;
 	(*nprobes)--;
@@ -144,7 +143,6 @@ int check_timeout(t_config* cfg, t_route* route)
 		i >= route->len;
 		i--
 	) {
-
 		here = -1.f;
 		for (j = 0; j < route->hops[i].nb_sent; j++)
 		{
@@ -200,7 +198,12 @@ bool browse_route(t_config* cfg, t_route* route)
 			{
 				/* Print gateway address only if it's not the same than the last probe from same hop */
 				if (!last || ft_strncmp(last->address, hop->probes[i].address, INET6_ADDRSTRLEN) != 0)
-					printf("%s (%s) ", hop->probes[i].hostname, hop->probes[i].address);
+				{
+					if (hop->probes[i].hostname[0] != '\0')
+						printf("%s (%s) ", hop->probes[i].hostname, hop->probes[i].address);
+					else
+						printf("%s ", hop->probes[i].address);
+				}
 				printf(" %.3f ms ", hop->probes[i].rtt);
 			}
 			else

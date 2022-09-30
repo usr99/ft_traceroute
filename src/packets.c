@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 23:34:50 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/01 00:45:00 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void init_probe(t_probe* ptr, uint16_t id)
 	gettimeofday(&ptr->time_sent, NULL);
 }
 
-int validate_packet(char* payload, size_t len, t_config* cfg)
+uint8_t validate_packet(char* payload, size_t len, t_config* cfg)
 {
 	/*
 	** Packets should have at least IP + ICMP headers
@@ -53,8 +53,19 @@ int validate_packet(char* payload, size_t len, t_config* cfg)
 
 		/* Compare original packet destination to our destination */
 		struct iphdr* origin_ip = (struct iphdr*)(payload + sizehdr + sizeof(struct icmphdr));
-		if (origin_ip->daddr != get_address(&cfg->host))
+		if (origin_ip->daddr != ((struct sockaddr_in*)&cfg->host)->sin_addr.s_addr)
 			return 0;
+
+		/*
+		** Process ICMP header
+		** discard all messages that are not TIME_EXCEEDED or PORT_UNREACHABLE
+		*/
+		struct icmphdr* icmp = (struct icmphdr*)(payload + sizehdr);
+		if (compare_checksums((uint16_t*)icmp, len - sizehdr, &icmp->checksum) == -1)
+			return 0;
+		if (icmp->type == ICMP_DEST_UNREACH && icmp->code != ICMP_PORT_UNREACH)
+			return 0;
+		return icmp->type;
 	}
 	else
 	{
@@ -63,44 +74,38 @@ int validate_packet(char* payload, size_t len, t_config* cfg)
 		sizehdr = sizeof(struct ip6_hdr);
 
 		/* Compare original packet destination to our destination */
-		struct ip6_hdr* origin_ip = (struct ip6_hdr*)(payload + sizehdr + sizeof(struct icmp6_hdr));
-		if (*(__int128_t*)origin_ip->ip6_dst.__in6_u.__u6_addr32 != get_address(&cfg->host))
+		struct ip6_hdr* origin_ip = (struct ip6_hdr*)(payload + sizeof(struct icmp6_hdr));
+		if (!compare_ipv6_addresses(&origin_ip->ip6_dst, (struct sockaddr_in6*)&cfg->host))
 			return 0;
-	}
 
-	/*
-	** Process ICMP header
-	** discard all messages that are not TIME_EXCEEDED or PORT_UNREACHABLE
-	*/
-	struct icmphdr* icmp = (struct icmphdr*)(payload + sizehdr);
-	if (compare_checksums((uint16_t*)icmp, len - sizehdr, &icmp->checksum) == -1)
-		return 0;
-	if (icmp->type == ICMP_DEST_UNREACH && icmp->code != ICMP_PORT_UNREACH)
-		return 0;
-	return icmp->type;
+		struct icmp6_hdr* icmp = (struct icmp6_hdr*)payload;
+		if (compare_checksums((uint16_t*)icmp, len, &icmp->icmp6_cksum) == -1)
+			return 0;
+
+		if (icmp->icmp6_type == ICMP6_DST_UNREACH)
+			return icmp->icmp6_code;
+		else
+			return icmp->icmp6_type;
+	}
 }
 
-void parse_packet(char* payload, struct sockaddr_storage* addr, uint16_t* id)
+uint16_t extract_probe_id(char* payload, struct sockaddr_storage* addr)
 {
 	struct udphdr* origin_udp;
 
 	if (addr->ss_family == AF_INET)
 	{
-		struct iphdr* ip = (struct iphdr*)payload;
 		struct iphdr* origin_ip = (struct iphdr*)(payload + sizeof(struct iphdr) + sizeof(struct icmphdr));
 		origin_udp = (struct udphdr*)(origin_ip + 1);
-		((struct sockaddr_in*)addr)->sin_addr.s_addr = ip->saddr; // retrieve source address
 	}
 	else
 	{
-		struct icmp6_hdr* icmp6 = (struct icmp6_hdr*)payload;
-		struct ip6_hdr* origin_ip = (struct ip6_hdr*)(icmp6 + 1);
+		struct ip6_hdr* origin_ip = (struct ip6_hdr*)(payload + sizeof(struct icmp6_hdr));
 		origin_udp = (struct udphdr*)(origin_ip + 1);
-		*(__int128_t*)((struct sockaddr_in6*)addr)->sin6_addr.__in6_u.__u6_addr32 = *(__int128_t*)ip->ip6_src.__in6_u.__u6_addr32; // retrieve source address
 	}
 
- 	/* Retrieve original destination UDP port */
-	*id = ntohs(origin_udp->dest);
+ 	/* Return original destination UDP port */
+	return ntohs(origin_udp->dest);
 }
 
 uint16_t compute_checksum(uint16_t* data, size_t bytes)

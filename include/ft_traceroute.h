@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 16:30:40 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/01 00:45:14 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ typedef struct s_config
 typedef struct s_route
 {
 	t_hop* hops;
-	uint8_t current_ttl;
+	int current_ttl;
 	uint8_t len;
 	uint8_t maxlen;
 } t_route;
@@ -53,7 +53,7 @@ int log_error(const char* message);
 float get_duration_from_now(struct timeval* from);
 float get_duration_ms(struct timeval* from, struct timeval* to);
 int addr_to_text(const struct sockaddr_storage* addr, char* buffer);
-__int128_t get_address(struct sockaddr_storage* address);
+bool compare_ipv6_addresses(const struct in6_addr* rhs, const struct sockaddr_in6* lhs);
 
 /* debug.c */
 void debug_options(t_cmdline_args* opt);

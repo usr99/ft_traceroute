@@ -1,3 +1,4 @@
 .vscode
 objs/*.o
 ft_traceroute
+debug

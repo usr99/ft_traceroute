@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 21:51:30 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 16:30:30 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/01 00:44:53 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,14 +50,14 @@ int addr_to_text(const struct sockaddr_storage* addr, char* buffer)
 	return ret ? 0 : -1;
 }
 
-__int128_t get_address(struct sockaddr_storage* address)
+bool compare_ipv6_addresses(const struct in6_addr* rhs, const struct sockaddr_in6* lhs)
 {
-	if (address->ss_family == AF_INET)
-		return ((struct sockaddr_in*)address)->sin_addr.s_addr;
-	else
+	int i;
+
+	for (i = 0; i < 4; i++)
 	{
-		uint32_t* addr6 = ((struct sockaddr_in6*)address)->sin6_addr.__in6_u.__u6_addr32;
-		__int128_t result = addr6[0] + addr6[1] + addr6[2] + addr6[3];
-		return result;
+		if (rhs->__in6_u.__u6_addr32[i] != lhs->sin6_addr.__in6_u.__u6_addr32[i])
+			return false;
 	}
+	return true;
 }

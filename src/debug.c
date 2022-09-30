@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/23 17:37:32 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 21:35:05 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/01 00:45:05 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,8 @@ void debug_options(t_cmdline_args* opt)
 
 void debug_route(const t_route* route, const t_config* cfg)
 {
-	unsigned int i, j;
+	int i;
+	unsigned int j;
 
 	for (i = 0; i < route->current_ttl; i++)
 	{

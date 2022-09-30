@@ -6,12 +6,13 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/29 23:29:35 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/01 00:45:03 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <linux/icmp.h>
 #include <netinet/icmp6.h>
+#include <netinet/ip6.h>
 #include <stdio.h>
 
 #include "ft_traceroute.h"
@@ -109,7 +110,7 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 		return log_error("failed to set ICMP filter");
 	}
 	return 0;
-}
+}\
 
 int init_route(t_config* cfg, t_route* route)
 {
@@ -121,7 +122,7 @@ int init_route(t_config* cfg, t_route* route)
 	if (cfg->host.ss_family == AF_INET)
 		ret = inet_ntop(cfg->opt.family, &((struct sockaddr_in*)&cfg->host)->sin_addr.s_addr, address, INET6_ADDRSTRLEN);
 	else
-		ret = inet_ntop(cfg->opt.family, ((struct sockaddr_in6*)&cfg->host)->sin6_addr.__in6_u.__u6_addr32, address, INET6_ADDRSTRLEN);
+		ret = inet_ntop(cfg->opt.family, ((struct sockaddr_in6*)&cfg->host)->sin6_addr.in6_u.u6_addr32, address, INET6_ADDRSTRLEN);
 	if (!ret)
 		return -1;
 
