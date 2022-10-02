@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 18:47:03 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/26 21:13:55 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 00:00:56 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,6 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 {
 	static t_expected_opts valid_options[N_OPTIONS_SUPPORTED] = {
 		{ .name = '6', .has_param = false },
-		{ .name = 'I', .has_param = false },
-		{ .name = 'T', .has_param = false },
 		{ .name = 'n', .has_param = false },
 		{ .name = 'h', .has_param = false },
 		{ .name = 'f', .has_param = true, .paramtype = PARAM_T_INT64 },
@@ -114,8 +112,6 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 				{
 					if (ft_strtol((char*)arg.value, (long*)&val) == -1)
 						snprintf(errmsg, ERRMSG_MAXLEN, "Cannot handle \"packetlen\" cmdline arg \'%s\'", (char*)arg.value);
-					else if (val < PACKETLEN_MIN)
-						val = PACKETLEN_MIN;
 					else if (val > PACKETLEN_MAX)
 						snprintf(errmsg, ERRMSG_MAXLEN, "too big packetlen %d specified", val);
 					opt->packetlen = val;
@@ -151,6 +147,12 @@ int parse_arguments(int argc, char** argv, t_cmdline_args* opt)
 		return log_error("first hop out of range");
 	if (opt->squeries < 1)
 		opt->squeries = 1;
+
+	size_t min_packetlen = (opt->family == AF_INET) ? PACKETLEN_V4_MIN : PACKETLEN_V6_MIN;
+	if (nparameters < 2) // packetlen was not set
+		opt->packetlen = min_packetlen + 32; // default value
+	else if (opt->packetlen < min_packetlen)
+		opt->packetlen = min_packetlen;
 
 	if (!opt->address)
 		return (argc != 1) ? log_error("Specify \"host\" missing argument.") : print_usage(argv[0]);
