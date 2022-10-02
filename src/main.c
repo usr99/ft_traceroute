@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/03 01:19:25 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 01:30:28 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,13 +41,13 @@ int main(int argc, char** argv)
 	{
 		if (send_probes(&config, &route, &nprobes) != 0)
 		{
-			printf("fatal error\n");
+			printf("Failure occured when trying to send probes\n");
 			break; // fatal error
 		}
 
 		if (recv_response(&config, &route, &nprobes) != 0)
 		{
-			printf("fatal error\n");
+			printf("Failure occured when trying to receive responses\n");
 			break; // fatal error
 		}
 		
