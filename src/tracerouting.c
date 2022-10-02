@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/02 23:53:05 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 01:25:58 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,6 @@
 int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 {
 	static bool all_probes_sent = false;
-	static char* buffer = NULL;
-	static size_t bufsize = 0;
 
 	if (*nprobes >= cfg->opt.squeries || all_probes_sent)
 		return 0;
@@ -56,13 +54,8 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 	else
 		((struct sockaddr_in6*)&cfg->host)->sin6_port = htons(cfg->opt.port);
 
-	if (!buffer)
-	{
-		bufsize = cfg->opt.packetlen - (cfg->opt.family == AF_INET ? PACKETLEN_V4_MIN : PACKETLEN_V6_MIN);
-		buffer = ft_calloc(bufsize, 1);
-		if (!buffer)
-			return -1;
-	}
+	char buffer[PACKETLEN_MAX] = {0};
+	size_t bufsize = cfg->opt.packetlen - (cfg->opt.family == AF_INET ? PACKETLEN_V4_MIN : PACKETLEN_V6_MIN);
 	init_probe(current_hop->probes + current_hop->nb_sent, cfg->opt.port); 
 	if (sendto(cfg->sockfd, buffer, bufsize, 0, (struct sockaddr*)&cfg->host, sizeof(struct sockaddr_storage)) >= 0)
 		cfg->opt.port++; // increased for each probe to match them with responses
@@ -124,14 +117,16 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 	if (cfg->opt.dns_enabled) // reverse dns on the gateway address that replied to us
 	{
 		gateway->status = WAITING_NAME_INFO;
-		if (reverse_dns_lookup(&addr, gateway, cfg) == -1)
+		if (reverse_dns_lookup(&addr, gateway, cfg, nprobes) == -1)
 			return -1;
 	}
 	else
+	{
+		(*nprobes)--;
 		gateway->status = SUCCESS;
+	}
 
 	hop->nb_recvd++;
-	(*nprobes)--;
 	return 0;
 }
 

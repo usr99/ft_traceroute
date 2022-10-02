@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 19:05:47 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/02 23:56:54 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 01:24:36 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 # define ERRMSG_MAXLEN			64
 # define PACKETLEN_V4_MIN		28 // ip header + udp	-> 20 + 8
 # define PACKETLEN_V6_MIN		48 // ipv6 header + udp	-> 40 + 8
-# define PACKETLEN_MAX			65000
+# define PACKETLEN_MAX			1000
 
 typedef struct s_waittime
 {

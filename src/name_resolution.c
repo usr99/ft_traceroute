@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 20:19:46 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/02 23:34:42 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 01:19:42 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ int resolve_hostname(struct sockaddr_storage* host, t_cmdline_args* opt)
 	return 0;
 }
 
-int reverse_dns_lookup(struct sockaddr_storage* addr, t_probe* gateway, t_config* cfg)
+int reverse_dns_lookup(struct sockaddr_storage* addr, t_probe* gateway, t_config* cfg, unsigned int *nprobes)
 {
 	t_rdns_args *p;
 	int i;
@@ -57,7 +57,9 @@ int reverse_dns_lookup(struct sockaddr_storage* addr, t_probe* gateway, t_config
 	ft_memcpy(p->addr, addr, sizeof(struct sockaddr_storage));
 	p->addr->ss_family = cfg->opt.family;
 	p->gateway_info = gateway;
+	p->nprobes = nprobes;
 	for (i = 0; i < cfg->opt.squeries && cfg->dns_threads[i].in_use; i++);
+
 	p->slot = cfg->dns_threads + i;
 	p->slot->in_use = true;
 
@@ -74,6 +76,7 @@ void* thread_routine(void* p)
 		params->gateway_info->hostname[0] = '\0';
 	params->gateway_info->status = SUCCESS;
 	params->slot->in_use = false;
+	(*params->nprobes)--;
 	
 	pthread_detach(pthread_self());
 	

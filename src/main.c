@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/02 23:36:03 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 01:19:25 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 			printf("fatal error\n");
 			break; // fatal error
 		}
+
 		if (recv_response(&config, &route, &nprobes) != 0)
 		{
 			printf("fatal error\n");
