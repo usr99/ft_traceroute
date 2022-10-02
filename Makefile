@@ -4,7 +4,7 @@
 
 TARGET	= ft_traceroute
 
-CFLAGS	= -Wall -Wextra -g #-Werror
+CFLAGS	= -Wall -Wextra -Werror
 CC		= gcc
 
 INC 	= -I ./include -I ./libft
