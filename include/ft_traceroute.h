@@ -6,13 +6,14 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:17:35 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/01 00:45:14 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/02 09:37:36 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef _FT_TRACEROUTE_H_
 # define _FT_TRACEROUTE_H_
 
+# include "dns.h"
 # include "options.h"
 # include "packets.h"
 # include "libft.h"
@@ -21,6 +22,7 @@ typedef struct s_config
 {
 	t_cmdline_args opt;
 	struct sockaddr_storage host;
+	t_rdns_slot* dns_threads;
 	int sockfd;
 	int icmp_sockfd;
 } t_config;
@@ -43,10 +45,6 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes);
 int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes);
 int check_timeout(t_config* cfg, t_route* route);
 bool browse_route(t_config* cfg, t_route* route);
-
-/* name_resolution.c */
-int resolve_hostname(struct sockaddr_storage* host, t_cmdline_args* opt);
-int fetch_hostname(const struct sockaddr* addr, t_probe* gateway);
 
 /* utils.c */
 int log_error(const char* message);

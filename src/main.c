@@ -6,16 +6,18 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/01 00:45:03 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/02 23:36:03 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <pthread.h>
 #include <linux/icmp.h>
 #include <netinet/icmp6.h>
 #include <netinet/ip6.h>
 #include <stdio.h>
 
 #include "ft_traceroute.h"
+#include "dns.h"
 
 int main(int argc, char** argv)
 {
@@ -30,7 +32,7 @@ int main(int argc, char** argv)
 		close(config.icmp_sockfd);
 		return 2;
 	}
- 	
+
 	/* count of probes currently waiting for reply */
 	unsigned int nprobes = 0; // must never exceed <squeries> (set with -N, default 16)
 
@@ -51,10 +53,18 @@ int main(int argc, char** argv)
 		host_found = browse_route(&config, &route);
 	}
 
-	// debug_route(&route, &config);
-
 	close(config.sockfd);
 	close(config.icmp_sockfd);
+	if (config.opt.dns_enabled)
+	{
+		int i;
+		for (i = 0; i < config.opt.squeries; i++)
+		{
+			if (config.dns_threads[i].in_use)
+				pthread_join(config.dns_threads[i].id, NULL);
+		}
+		free(config.dns_threads);
+	}
 	destroy_route(&route);
 	return 0;
 }
@@ -104,11 +114,22 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 
 	if (setsockopt(cfg->icmp_sockfd, protocol, ICMP_FILTER, filter_ptr, filter_size) != 0)
 	{
-		perror("setsockopt");
 		close(cfg->sockfd);
 		close(cfg->icmp_sockfd);
 		return log_error("failed to set ICMP filter");
 	}
+
+	if (cfg->opt.dns_enabled)
+	{
+		cfg->dns_threads = ft_calloc(sizeof(t_rdns_slot), cfg->opt.squeries);
+		if (!cfg->dns_threads)
+		{
+			close(cfg->sockfd);
+			close(cfg->icmp_sockfd);
+			return log_error("Out of memory");
+		}
+	}
+
 	return 0;
 }\
 

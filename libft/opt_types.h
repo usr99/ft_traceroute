@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 00:38:13 by mamartin          #+#    #+#             */
-/*   Updated: 2022/09/22 16:23:39 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/02 09:55:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,7 @@
 # define _OPT_TYPES_H_
 
 # include <stdint.h>
-
-typedef uint8_t bool;
-enum e_boolval
-{
-	false,
-	true
-};
+# include <stdbool.h>
 
 /* Value types expected in a program/option parameter */
 typedef enum e_paramtype

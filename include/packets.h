@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:19:09 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/01 00:45:09 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/02 09:12:52 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ typedef struct s_config t_config;
 typedef enum e_probe_state
 {
 	WAITING_REPLY,
+	WAITING_NAME_INFO,
 	TIMED_OUT,
 	SUCCESS
 } t_probe_state;

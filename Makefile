@@ -18,6 +18,7 @@ OBJDIR	= ./objs/
 OBJS	= ${addprefix ${OBJDIR}, ${SRC:.c=.o}}
 
 LIBFT	= libft/libft.a
+LIBS	= -lpthread
 
 ##################################################
 #			OUTPUT VARIABLES DEFINITION			 #
@@ -43,7 +44,7 @@ ${OBJDIR}%.o: ${SRCDIR}%.c ${DEPS}
 
 ${TARGET}: ${OBJDIR} ${OBJS} ${LIBFT}
 	@echo "${BUILD} $@"
-	@${CC} ${OBJS} ${LIBFT} -o $@
+	@${CC} ${OBJS} ${LIBFT} -o $@ ${LIBS}
 	@echo "${PURPLE}Program was built successfully, have fun playing with ${GREEN}$@"
 
 ${OBJDIR}:
@@ -54,7 +55,7 @@ ${LIBFT}:
 	@${MAKE} --no-print-directory -C libft
 
 ##################################################
-#  				   USUAL RULES					 #./
+#  				   USUAL RULES					 #
 ##################################################
 
 all: ${TARGET}

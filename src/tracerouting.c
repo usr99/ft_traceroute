@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/01 00:44:56 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/02 23:35:00 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #include "ft_traceroute.h"
+#include "dns.h"
 
 int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 {
@@ -40,10 +41,7 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 		else
 			ret = setsockopt(cfg->sockfd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &route->current_ttl, sizeof(int));
 		if (ret == -1)
-		{
-			perror("setsockopt");
 			return -1;
-	}
 	}
 
 	/*
@@ -108,19 +106,20 @@ int recv_response(t_config* cfg, t_route* route, unsigned int *nprobes)
 	t_hop* hop = route->hops + (probeidx / cfg->opt.nqueries);
 	t_probe* gateway = hop->probes + (probeidx % cfg->opt.nqueries);
 	
-	/* Update probe status */
-	gateway->status = SUCCESS;
+	/* Update probe */
 	gateway->rtt = get_duration_from_now(&gateway->time_sent);
-	if (cfg->opt.family == AF_INET && type == ICMP_PORT_UNREACH)
+	if ((cfg->opt.family == AF_INET && type == ICMP_PORT_UNREACH) || (cfg->opt.family == AF_INET6 && type == ICMP6_DST_UNREACH_NOPORT))
 		hop->is_destination = true;
-	else if (cfg->opt.family == AF_INET6 && type == ICMP6_DST_UNREACH_NOPORT)
-		hop->is_destination = true;
-
-	/* Save source address as a string and perform a reverse dns lookup to retrieve hostname if any */
-	if (addr_to_text(&addr, gateway->address) == -1)
+	if (addr_to_text(&addr, gateway->address) == -1) // save source address as a string
 		return -1;
-	// if (getnameinfo((struct sockaddr*)&addr, sizeof(struct sockaddr_in), gateway->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
-		// ft_strlcpy(gateway->hostname, gateway->address, INET6_ADDRSTRLEN); // copy ip address if dns lookup fails
+	if (cfg->opt.dns_enabled) // reverse dns on the gateway address that replied to us
+	{
+		gateway->status = WAITING_NAME_INFO;
+		if (reverse_dns_lookup(&addr, gateway, cfg) == -1)
+			return -1;
+	}
+	else
+		gateway->status = SUCCESS;
 
 	hop->nb_recvd++;
 	(*nprobes)--;
@@ -154,7 +153,7 @@ int check_timeout(t_config* cfg, t_route* route)
 				if (near == -1.f || probe->rtt < near)
 					near = probe->rtt;
 			}
-			else if (probe->status != TIMED_OUT)
+			else if (probe->status != TIMED_OUT && probe->status != WAITING_NAME_INFO)
 			{
 				float timeout = cfg->opt.timeout.max * 1000.f;
 				elapsed_time = get_duration_from_now(&probe->time_sent);
@@ -185,13 +184,15 @@ bool browse_route(t_config* cfg, t_route* route)
 		int i;
 		for (i = 0; i < cfg->opt.nqueries; i++)
 		{
-			if (hop->probes[i].status == WAITING_REPLY)
+			if (hop->probes[i].status == WAITING_REPLY || hop->probes[i].status == WAITING_NAME_INFO)
 				return false; // we are still waiting for responses
 		}
 
 		/* Log hop statistics */
 		t_probe* last = NULL;
-		printf(" %d  ", route->len + cfg->opt.first_ttl);
+		if (route->len < 9)
+			ft_putchar_fd(' ', STDOUT_FILENO);
+		printf("%d  ", route->len + cfg->opt.first_ttl);
 		for (i = 0; i < cfg->opt.nqueries; i++)
 		{
 			if (hop->probes[i].status == SUCCESS)
