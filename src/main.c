@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/03 01:36:00 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/03 01:45:13 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ int setup_tracerouting(int argc, char** argv, t_config* cfg)
 	}
 
 	return 0;
-}\
+}
 
 int init_route(t_config* cfg, t_route* route)
 {
