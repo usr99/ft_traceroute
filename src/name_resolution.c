@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/20 20:19:46 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/03 01:19:42 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/04 05:44:39 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,11 @@ void* thread_routine(void* p)
 
 	if (getnameinfo((struct sockaddr*)params->addr, sizeof(struct sockaddr_storage), params->gateway_info->hostname, HOST_NAME_MAX, NULL, 0, 0) != 0)
 		params->gateway_info->hostname[0] = '\0';
+
+	pthread_mutex_lock(&params->gateway_info->mut);
 	params->gateway_info->status = SUCCESS;
+	pthread_mutex_unlock(&params->gateway_info->mut);
+	
 	params->slot->in_use = false;
 	(*params->nprobes)--;
 	

@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 14:19:19 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/03 01:25:58 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/04 05:43:38 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,8 @@ int send_probes(t_config* cfg, t_route* route, unsigned int *nprobes)
 
 	char buffer[PACKETLEN_MAX] = {0};
 	size_t bufsize = cfg->opt.packetlen - (cfg->opt.family == AF_INET ? PACKETLEN_V4_MIN : PACKETLEN_V6_MIN);
-	init_probe(current_hop->probes + current_hop->nb_sent, cfg->opt.port); 
+	if (init_probe(current_hop->probes + current_hop->nb_sent, cfg->opt.port) == -1)
+		return -1;
 	if (sendto(cfg->sockfd, buffer, bufsize, 0, (struct sockaddr*)&cfg->host, sizeof(struct sockaddr_storage)) >= 0)
 		cfg->opt.port++; // increased for each probe to match them with responses
 	else
@@ -150,6 +151,7 @@ int check_timeout(t_config* cfg, t_route* route)
 		for (j = 0; j < route->hops[i].nb_sent; j++)
 		{
 			probe = route->hops[i].probes + j;
+			pthread_mutex_lock(&probe->mut);
 			if (probe->status == SUCCESS)
 			{
 				if (here == -1.f || probe->rtt < here)
@@ -173,6 +175,7 @@ int check_timeout(t_config* cfg, t_route* route)
 					count++;
 				}
 			}
+			pthread_mutex_unlock(&probe->mut);
 		}
 	}
 	return count;
@@ -188,8 +191,13 @@ bool browse_route(t_config* cfg, t_route* route)
 		int i;
 		for (i = 0; i < cfg->opt.nqueries; i++)
 		{
+			pthread_mutex_lock(&hop->probes[i].mut);
 			if (hop->probes[i].status == WAITING_REPLY || hop->probes[i].status == WAITING_NAME_INFO)
+			{
+				pthread_mutex_unlock(&hop->probes[i].mut);
 				return false; // we are still waiting for responses
+			}
+			pthread_mutex_unlock(&hop->probes[i].mut);
 		}
 
 		/* Log hop statistics */

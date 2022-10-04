@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/21 13:43:57 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/01 00:45:00 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/04 05:29:12 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,14 @@
 
 #include <netinet/ip6.h>
 
-void init_probe(t_probe* ptr, uint16_t id)
+int init_probe(t_probe* ptr, uint16_t id)
 {
+	if (pthread_mutex_init(&ptr->mut, NULL) != 0)
+		return -1;
 	ptr->status = WAITING_REPLY;
 	ptr->id = id;
 	gettimeofday(&ptr->time_sent, NULL);
+	return 0;
 }
 
 uint8_t validate_packet(char* payload, size_t len, t_config* cfg)

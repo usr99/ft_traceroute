@@ -6,7 +6,7 @@
 /*   By: mamartin <mamartin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 10:13:43 by mamartin          #+#    #+#             */
-/*   Updated: 2022/10/03 01:45:13 by mamartin         ###   ########.fr       */
+/*   Updated: 2022/10/04 05:34:59 by mamartin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,10 +164,16 @@ int init_route(t_config* cfg, t_route* route)
 void destroy_route(t_route* route)
 {
 	int i;
+	unsigned int j;
+
 	for (i = 0; i < route->maxlen; i++)
 	{
 		if (route->hops[i].probes)
+		{
+			for (j = 0; j < route->hops[i].nb_sent; j++)
+				pthread_mutex_destroy(&route->hops[i].probes[j].mut);
 			free(route->hops[i].probes);
+		}
 		else
 			break ;
 	}
